@@ -1,0 +1,31 @@
+services:
+  docs:
+    build:
+      context: .
+      dockerfile: apps/docs/Dockerfile
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - KROKI_BASE_URL=http://kroki:8000
+      - WATCHPACK_POLLING=true
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/docs:/app/apps/docs
+      - ./apps/docs/diagrams:/app/apps/docs/diagrams
+      - /app/apps/docs/.next
+      - root_node_modules:/app/node_modules
+      - docs_node_modules:/app/apps/docs/node_modules
+      - root_turbo_cache:/app/.turbo
+    depends_on:
+      - kroki
+
+  kroki:
+    image: yuzutech/kroki:latest
+    ports:
+      - "8000:8000"
+
+volumes:
+  root_node_modules:
+  docs_node_modules:
+  root_turbo_cache:

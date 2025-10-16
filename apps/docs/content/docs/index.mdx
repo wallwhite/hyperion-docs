@@ -1,0 +1,52 @@
+---
+title: Introduction
+description: Developer-first documentation with diagrams-as-code and more
+icon: Book
+---
+
+# Welcome to Diagramming Guru
+
+This is a **developer-first** documentation stack that combines:
+
+- **Fumadocs v15** for beautiful, fast MDX documentation
+- **Kroki** for rendering diagrams from code
+- **Mermaid** for inline diagrams with dark/light theme support
+- **React Flow** for zoomable diagram viewing
+
+## Features
+
+
+### 🚀 Hot Reload in Docker
+The entire stack runs in Docker with hot reload enabled for fast development.
+
+### 🔒 Secure by Default
+- Path traversal protection
+- File size limits
+- Language allowlist
+- No code execution
+
+### 📦 One-Command Setup
+
+```bash
+./scripts/dev.sh
+# or
+pnpm dev
+```
+
+That's it! Both services (docs + Kroki) start with a single command.
+
+## Getting Started
+
+1. Clone the repository
+2. Run `pnpm dev` to start both services
+3. Visit `http://localhost:3000`
+4. Edit MDX files or diagrams - changes reflect immediately!
+
+## Supported Diagram Languages
+
+- **PlantUML** (`puml`, `plantuml`)
+- **Graphviz** (`dot`, `graphviz`)
+- **Mermaid** (inline via `<Mermaid>` or via Kroki)
+- **C4 PlantUML** (`c4plantuml`)
+
+Easily extensible to support more Kroki-compatible formats!

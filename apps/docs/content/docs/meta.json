@@ -1,0 +1,11 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "---Guides---",
+    "quick-start",
+    "diagramming",
+    "---OpenAPI---",
+    "openapi"
+  ]
+}

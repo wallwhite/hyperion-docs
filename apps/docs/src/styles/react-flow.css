@@ -1,0 +1,30 @@
+
+.react-flow__panel.react-flow__attribution.bottom.left {
+  display: none;
+}
+
+.react-flow__node {
+  background: var(--color-zinc-900);
+  border: 1px solid var(--color-zinc-400);
+}
+
+.react-flow__controls {
+  background: var(--color-zinc-200);
+  color: var(--color-zinc-700);
+  border: 1px solid var(--color-zinc-300);
+}
+
+.react-flow__controls-button {
+  background: var(--color-zinc-300);
+  color: var(--color-zinc-700);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--color-zinc-400);
+  color: var(--color-zinc-700);
+}
+
+.react-flow__minimap {
+  background: var(--color-zinc-300)!important;
+  border: 1px solid var(--color-zinc-400)!important;
+}
