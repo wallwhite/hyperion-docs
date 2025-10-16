@@ -1,11 +1,14 @@
 'use client';
 
 import React, { type FC } from 'react';
+import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { Silk } from './silk-bg';
+
+const MotionCodeBlock = motion(CodeBlock);
 
 export const Hero: FC = () => {
   return (
@@ -107,6 +110,30 @@ export const Hero: FC = () => {
               Get started
             </Link>
           </motion.div>
+
+          <MotionCodeBlock
+            className="bg-zinc-900 px-8 pr-10 rounded-lg ring-4 ring-zinc-300/20 text-left"
+            lang="bash"
+            transition={{ duration: 0.5, delay: 1 }}
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+          >
+            <Pre className="text-zinc-300">git clone https://github.com/wallwhite/hyperion-docs.git</Pre>
+            <br />
+            <Pre className="text-zinc-500"># Navigate to the project directory</Pre>
+            <br />
+            <Pre className="text-zinc-300">cd hyperion-docs</Pre>
+            <br />
+            <Pre className="text-zinc-500"># Run start command</Pre>
+            <br />
+            <Pre className="text-zinc-300">./scripts/dev.sh</Pre>
+          </MotionCodeBlock>
         </div>
       </section>
     </>
