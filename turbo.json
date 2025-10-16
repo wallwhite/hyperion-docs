@@ -23,7 +23,8 @@
     },
     "build:openapi": {
       "dependsOn": ["^build:openapi"],
-      "outputs": ["apps/docs/content/docs/openapi/**"]
+      "outputs": ["apps/docs/content/docs/openapi/**"],
+      "cache": false
     }
   }
 }

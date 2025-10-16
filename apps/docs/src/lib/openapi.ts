@@ -1,5 +1,5 @@
 import { createOpenAPI } from 'fumadocs-openapi/server';
 
 export const openapi = createOpenAPI({
-  input: ['./api/sample.yaml'],
+  input: ['./openapi/sample.yaml'],
 });

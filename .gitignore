@@ -11,3 +11,5 @@ coverage/
 .vercel
 .source
 .map
+
+apps/docs/content/**/(generated)/**
