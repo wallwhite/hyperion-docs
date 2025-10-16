@@ -35,14 +35,17 @@ A two-service monorepo combining **Fumadocs v15** (Next.js) for beautiful MDX do
 ### Installation
 
 ```bash
-# Verify your environment (optional but recommended)
-./verify.sh
+# Clone the repository
+git clone https://github.com/wallwhite/hyperion-docs.git
+
+# Navigate to the project directory
+cd hyperion-docs
 
 # Install dependencies
 pnpm install
 
 # Start both services (docs + kroki)
-pnpm dx
+pnpm dev
 ```
 
 Visit **http://localhost:3000** - changes hot-reload automatically!
@@ -50,7 +53,11 @@ Visit **http://localhost:3000** - changes hot-reload automatically!
 ### Stop Services
 
 ```bash
-pnpm down
+# Stop both services (docs + kroki)
+pnpm stop
+
+# or use the script
+./scripts/stop.sh
 ```
 
 ## Project Structure
