@@ -68,6 +68,9 @@ importers:
       next-themes:
         specifier: ^0.4.4
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
       plantuml-encoder:
         specifier: ^1.4.0
         version: 1.4.0
@@ -117,6 +120,9 @@ importers:
       '@types/node':
         specifier: 24.6.2
         version: 24.6.2
+      '@types/pako':
+        specifier: ^2.0.4
+        version: 2.0.4
       '@types/plantuml-encoder':
         specifier: ^1.4.2
         version: 1.4.2
@@ -1521,6 +1527,9 @@ packages:
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
+
+  '@types/pako@2.0.4':
+    resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
 
   '@types/plantuml-encoder@1.4.2':
     resolution: {integrity: sha512-R60SYlcXyTXQebyVwcarGSJUucuwYY5wetBWAOnRt3k52flBXgt4R1KrxaZ4xpk5MpVo9titpVBBhgl/A9JWRQ==}
@@ -3651,6 +3660,9 @@ packages:
 
   package-manager-detector@1.4.0:
     resolution: {integrity: sha512-rRZ+pR1Usc+ND9M2NkmCvE/LYJS+8ORVV9X0KuNSY/gFsp7RBHJM/ADh9LYq4Vvfq6QkKrW6/weuh8SMEtN5gw==}
+
+  pako@2.1.0:
+    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -5900,6 +5912,8 @@ snapshots:
       undici-types: 7.13.0
 
   '@types/normalize-package-data@2.4.4': {}
+
+  '@types/pako@2.0.4': {}
 
   '@types/plantuml-encoder@1.4.2':
     dependencies:
@@ -8661,6 +8675,8 @@ snapshots:
   p-try@2.2.0: {}
 
   package-manager-detector@1.4.0: {}
+
+  pako@2.1.0: {}
 
   parent-module@1.0.1:
     dependencies:

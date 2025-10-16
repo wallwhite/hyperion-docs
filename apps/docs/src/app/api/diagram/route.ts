@@ -17,12 +17,21 @@ const MAX_BYTES = 256 * 1024;
 
 export const revalidate = 3600;
 
+const encode = async (str: string) => {
+  const pako = await import('pako');
+
+  const data = Buffer.from(str, 'utf8');
+
+  const compressed = pako.deflate(data, { level: 9 });
+
+  return Buffer.from(compressed).toString('base64').replaceAll('+', '-').replaceAll('/', '_');
+};
+
 export const GET = async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     const lang = searchParams.get('lang')?.toLowerCase() ?? '';
     const relPath = searchParams.get('path') ?? '';
-    const fmt = (searchParams.get('fmt') ?? 'svg').toLowerCase();
 
     const kind = LANG_MAP[lang];
 
@@ -37,29 +46,21 @@ export const GET = async (req: NextRequest) => {
     if (data.byteLength > MAX_BYTES) return NextResponse.json({ error: 'File too large' }, { status: 413 });
 
     const krokiBase = process.env.KROKI_BASE_URL ?? 'http://kroki:8000';
-    const url = `${krokiBase}/${kind}/${fmt}`;
+
+    const encoded = await encode(data.toString());
+    const url = `${krokiBase}/${kind}/svg/${encoded}`;
 
     const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: data.toString(),
+      method: 'get',
     });
 
     if (!r.ok) return NextResponse.json({ error: `Kroki failed: ${r.status}` }, { status: 502 });
 
-    if (fmt === 'svg') {
-      const svg = await r.text();
+    const svg = await r.text();
 
-      return new NextResponse(svg, {
-        status: 200,
-        headers: { 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'no-store' },
-      });
-    }
-    const blob = await r.arrayBuffer();
-
-    return new NextResponse(Buffer.from(blob), {
+    return new NextResponse(svg, {
       status: 200,
-      headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' },
+      headers: { 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'no-store' },
     });
   } catch (error) {
     console.error('Diagram API error:', error);
