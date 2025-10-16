@@ -3,7 +3,7 @@
 import { type FC, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Color, type Mesh, type IUniform } from 'three';
-import { hexToNormalizedRGB } from '@/lib/utils';
+import { cn, hexToNormalizedRGB } from '@/lib/utils';
 import { SilkPlane } from './silk-plane';
 
 interface SilkProps {
@@ -12,6 +12,7 @@ interface SilkProps {
   color?: string;
   noiseIntensity?: number;
   rotation?: number;
+  className?: string;
 }
 
 export const Silk: FC<SilkProps> = ({
@@ -20,6 +21,7 @@ export const Silk: FC<SilkProps> = ({
   color = '#7B7481',
   noiseIntensity = 1.5,
   rotation = 0,
+  className,
 }) => {
   const meshRef = useRef<Mesh | null>(null);
 
@@ -36,7 +38,7 @@ export const Silk: FC<SilkProps> = ({
   );
 
   return (
-    <Canvas dpr={[1, 2]} frameloop="always">
+    <Canvas dpr={[1, 2]} frameloop="always" className={cn(className)}>
       <SilkPlane ref={meshRef} uniforms={uniforms as unknown as Record<string, IUniform>} />
     </Canvas>
   );
