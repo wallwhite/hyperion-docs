@@ -1,0 +1,59 @@
+---
+title: Level 2 - Container
+description: Container-level view of the Demo project system
+---
+
+<Diagram
+  lang="mermaid"
+  chart="
+graph TD;
+
+    %% Users
+    InternalUser[<a href='../glossary/actor'>👤 Internal User</a>]
+    Customer[<a href='../glossary/actor'>👤 Customer</a>]
+    Visitor[<a href='../glossary/actor'>👤 Visitor</a>]
+    Vendor[<a href='../glossary/actor'>👤 Vendor</a>]
+
+    %% BackOffice System
+    subgraph BackOfficeSystem [BackOffice System]
+        BackOfficeClient[🖥️ BackOffice<br/>Frontend]
+        BackOfficeBff[⚡ BackOffice BFF<br/>Backend-for-frontend]
+    end
+
+    %% Mobile System
+    subgraph MobileSystem [Mobile System]
+        MobileClient[📱 Mobile Client<br/>Cocoa]
+        MobileBff[⚡ Mobile BFF<br/>Backend-for-frontend]
+    end
+    
+    %% Website System
+    subgraph WebsiteSystem [Website System]
+        WebsiteClient[<a href='services/website-client'>🌐 Web Site Client<br/>Frontend</a>]
+        WebsiteBff[<a href='services/website-bff'>⚡ Web Site BFF<br/>Backend-for-frontend</a>]
+    end
+
+
+    %%Actor to BackOffice
+    InternalUser --> BackOfficeClient
+    BackOfficeClient --> BackOfficeBff
+    BackOfficeBff --> Backend
+
+    %%Actor to MobileClient
+    Customer --> MobileClient
+    Visitor --> MobileClient
+    MobileClient --> MobileBff
+    MobileBff --> Backend
+
+    %%Actor to WebsiteClient
+    Vendor --> WebsiteClient
+    Customer --> WebsiteClient
+    InternalUser --> WebsiteClient
+    Visitor --> WebsiteClient
+    WebsiteClient --> WebsiteBff
+    WebsiteBff --> Backend
+
+
+    %% Backend
+    Backend[<a href='c3'>🏗️ Backend<br/>Core business logic and data processing</a>]
+
+" />

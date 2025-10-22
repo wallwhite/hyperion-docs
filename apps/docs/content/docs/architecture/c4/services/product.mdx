@@ -1,0 +1,58 @@
+---
+title: Product
+description: Product Service information
+index: true
+---
+
+<Diagram
+  lang="mermaid"
+  chart="
+graph TD;
+
+   subgraph ProductService [Product Service]
+        subgraph Application [Application Layer]
+            Backend[🐘 PHP, Symfony<br/>Product Backend]
+        end
+        
+        subgraph Database [Database Layer]
+            DB[🗄️ PostgreSQL<br/>Products, catalog, inventory data]
+        end
+        
+        subgraph Cache [Cache Layer]
+            CacheSystem[⚡ Redis<br/>Product cache]
+        end
+        
+        Backend --> DB
+        Backend --> CacheSystem
+    end
+
+    subgraph InternalSystems [Internal Systems]
+        RabbitMQ[🐰 RabbitMQ<br/>Message broker]
+    end
+
+    subgraph ExternalSystems [External Systems]
+        Sentry[🐛 Sentry<br/>Error tracking]
+        Zendesk[🎧 Zendesk<br/>Support system integration]
+        CDN[📦 CDN<br/>Product images and assets]
+        Search[🔍 Elasticsearch<br/>Product search]
+    end
+
+    Backend --> RabbitMQ
+    Backend --> Sentry
+    Backend --> Zendesk
+    Backend --> CDN
+    Backend --> Search
+    
+    classDef applicationStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef databaseStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    classDef cacheStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    classDef internalStyle fill:#e1bee7,stroke:#8e24aa,stroke-width:2px,color:#000
+    classDef externalStyle fill:#ffccbc,stroke:#e64a19,stroke-width:2px,color:#000
+    
+    class Backend applicationStyle
+    class DB databaseStyle
+    class CacheSystem cacheStyle
+    class RabbitMQ internalStyle
+    class Sentry,Zendesk,CDN,Search externalStyle
+
+" />

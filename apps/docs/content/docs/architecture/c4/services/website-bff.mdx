@@ -1,0 +1,38 @@
+---
+title: Website BFF
+description: Backend-for-Frontend for Website
+---
+
+<Diagram
+  lang="mermaid"
+  chart="
+graph TD;
+
+    subgraph WebsiteBFF [Website BFF]
+        subgraph Application [Application Layer]
+            BFF[🟢 Node.js, Express<br/>Website BFF Backend]
+        end
+        
+        subgraph Cache [Cache Layer]
+            Redis[⚡ Redis<br/>Session and cache store]
+        end
+        
+        BFF --> Redis
+    end
+
+    subgraph InternalSystems [Internal Systems]
+        Backend[<a href='../c3'>🏗️ Backend<br/>Core business logic and services</a>]
+    end
+
+    BFF --> Backend
+    
+    classDef applicationStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef cacheStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    classDef internalStyle fill:#e1bee7,stroke:#8e24aa,stroke-width:2px,color:#000
+    
+    class BFF applicationStyle
+    class Redis cacheStyle
+    class Backend internalStyle
+
+" />
+

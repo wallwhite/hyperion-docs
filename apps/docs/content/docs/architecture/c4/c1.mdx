@@ -1,0 +1,52 @@
+---
+title: Level 1 - System Context
+description: High-level system context diagram
+---
+
+<Diagram
+  lang="mermaid"
+  chart="
+graph TD;
+
+    %% Users
+    Visitor[<a href='../glossary/actor'>👤 Visitor<br/>Random web visitor</a>]
+    Customer[<a href='../glossary/actor'>👤 Customer<br/>Registered user, using app</a>]
+    Vendor[<a href='../glossary/actor'>👤 Vendor<br/>Manage apps, payments, get stats, feedbacks</a>]
+    InternalUser[<a href='../glossary/actor'>👤 Internal User<br/>Customer Success, Vendor Success, Content Managers</a>]
+
+    %% Main System
+    Main[<a href='c2'>🎯 System<br/>Software System</a>]
+
+    %% User to System Relationships
+    Visitor --> Main
+    Customer --> Main
+    Vendor --> Main
+    InternalUser --> Main
+
+    %% External Systems
+    PaymentSystem[💳 Payments Systems<br/>Paddle, Stripe, Roz, Nova, Paypal]
+    Notifications[📧 Notifications tools<br/>Email: e-epoint, Create&Sent]
+    MarketingTools[🎯 Marketing tools<br/>Affiliate: PipeDrive, Coupons, E-Pay]
+    Support[🎧 Support Tools<br/>zendesk, widget]
+    FeatureFlag[🚩 FeatureFlag tool<br/>Feature Flag, ABN-tests]
+    AI[🚩 AI tool<br/>Search, boot, ...]
+
+    %% System to External Systems
+    Main --> PaymentSystem
+    Main --> Notifications
+    Main --> MarketingTools
+    Main --> Support
+    Main --> FeatureFlag
+    Main --> AI
+    
+
+    %% Styling
+    classDef userStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef systemStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:3px,color:#00
+
+    class Visitor,Customer,Vendor,InternalUser userStyle
+    class Main systemStyle
+    classDef externalStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+
+"
+/>

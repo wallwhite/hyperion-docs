@@ -1,0 +1,10 @@
+{
+  "title": "C4 Model",
+  "description": "The C4 model of the demo project.",
+  "pages": [
+    "c1",
+    "c2",
+    "c3",
+    "services"
+  ]
+}

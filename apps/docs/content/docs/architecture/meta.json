@@ -1,0 +1,10 @@
+{
+  "title": "Architecture",
+  "description": "The architecture of the Demo Project.",
+  "pages": [
+    "index",
+    "glossary",
+    "c4"
+  ]
+}
+

@@ -1,0 +1,9 @@
+{
+  "title": "Glossary",
+  "description": "A glossary of terms used in the Demo Project documentation.",
+  "pages": [
+    "actor",
+    "orderType"
+  ]
+}
+

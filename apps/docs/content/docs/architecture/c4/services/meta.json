@@ -1,0 +1,10 @@
+{
+  "title": "Services",
+  "description": "C4 Services documentation",
+  "pages": [
+    "website-client",
+    "website-bff",
+    "billing",
+    "product"
+  ]
+} 

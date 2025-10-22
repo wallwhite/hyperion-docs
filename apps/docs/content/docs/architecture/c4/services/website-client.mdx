@@ -1,0 +1,39 @@
+---
+title: Website Client
+description: Web Site Frontend Application
+---
+
+<Diagram
+  lang="mermaid"
+  chart="
+graph TD;
+
+    subgraph WebsiteClient [Website Client]
+        subgraph Frontend [Frontend Layer]
+            App[⚛️ React, Next.js<br/>Website Frontend Application]
+        end
+    end
+
+    subgraph InternalServices [Internal Services]
+        WebsiteBFF[<a href='website-bff'>⚡ Website BFF<br/>Backend-for-frontend</a>]
+    end
+
+    subgraph ExternalServices [External Services]
+        CDN[📦 CDN<br/>Static assets]
+        Analytics[📊 Analytics<br/>Google Analytics, Mixpanel]
+    end
+
+    App --> WebsiteBFF
+    App --> CDN
+    App --> Analytics
+    
+    classDef frontendStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef internalStyle fill:#e1bee7,stroke:#8e24aa,stroke-width:2px,color:#000
+    classDef externalStyle fill:#ffccbc,stroke:#e64a19,stroke-width:2px,color:#000
+    
+    class App frontendStyle
+    class WebsiteBFF internalStyle
+    class CDN,Analytics externalStyle
+
+" />
+
