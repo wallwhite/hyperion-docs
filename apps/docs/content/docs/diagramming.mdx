@@ -47,6 +47,37 @@ Z --> G;"
 
 <Diagram lang="plantuml" path="erd.puml" alt="Entity Relationship Diagram" />
 
+## PlantUML Include Feature
+
+```
+@startuml
+!include erd.puml
+
+entity Category {
+  * id : UUID
+  --
+  * name : String
+  * description : Text
+  created_at : DateTime
+}
+
+Post ||--o{ Category : "belongs to"
+@enduml
+```
+
+### Example: Extended ERD
+
+Here's our extended ERD that includes the base entities and adds a new Category entity:
+
+<Diagram lang="plantuml" path="include-erd.puml" alt="Extended Entity Relationship Diagram with Include" />
+
+### Include Best Practices
+
+1. **Create reusable components** - Extract common entities into separate files
+2. **Avoid circular includes** - Our system automatically detects and prevents circular dependencies
+3. **Keep includes simple** - Don't include entire complex diagrams, just the parts you need
+4. **Use relative paths** - Include files using relative paths from the current diagram location
+
 ## Graphviz Flow Diagram
 
 <Diagram lang="graphviz" path="flow.dot" alt="Processing Flow" />

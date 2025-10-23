@@ -27,6 +27,60 @@ const encode = async (str: string) => {
   return Buffer.from(compressed).toString('base64').replaceAll('+', '-').replaceAll('/', '_');
 };
 
+const resolveIncludes = async (content: string, baseDir: string, includedFiles: Set<string> = new Set()): Promise<string> => {
+  const includeRegex = /!include\s+(.+)$/gm;
+  let resolved = content;
+  let match;
+
+  while ((match = includeRegex.exec(content)) !== null) {
+    const includePath = match[1].trim();
+    
+    // Skip system includes (like !include <C4/C4_Container>)
+    if (includePath.startsWith('<') && includePath.endsWith('>')) {
+      console.log(`Skipping system include: ${includePath}`);
+      continue;
+    }
+    
+    const fullPath = path.resolve(baseDir, includePath);
+
+    // Security check
+    if (!fullPath.startsWith(BASE_DIR)) {
+      throw new Error(`Include path outside allowlist: ${includePath}`);
+    }
+
+    // Check for circular includes
+    if (includedFiles.has(fullPath)) {
+      console.warn(`Circular include detected: ${includePath}, skipping`);
+      resolved = resolved.replace(match[0], '');
+      continue;
+    }
+
+    try {
+      let includeContent = await fs.readFile(fullPath, 'utf8');
+      
+      // Add to included files set to prevent circular includes
+      const newIncludedFiles = new Set(includedFiles);
+      newIncludedFiles.add(fullPath);
+      
+      // Only remove @startuml and @enduml tags from included content
+      // Keep other directives as they might be needed
+      includeContent = includeContent.replace(/^@startuml\s*$/gm, '');
+      includeContent = includeContent.replace(/^@enduml\s*$/gm, '');
+      
+      // Recursively resolve includes in the included file
+      const resolvedInclude = await resolveIncludes(includeContent, path.dirname(fullPath), newIncludedFiles);
+      resolved = resolved.replace(match[0], resolvedInclude);
+      
+      console.log(`Included ${includePath}, content length: ${resolvedInclude.length}`);
+    } catch (error) {
+      console.error(`Failed to include file: ${includePath}`, error);
+      throw new Error(`Failed to include file: ${includePath}`);
+    }
+  }
+
+  return resolved;
+};
+
 export const GET = async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
@@ -41,13 +95,18 @@ export const GET = async (req: NextRequest) => {
 
     if (!abs.startsWith(BASE_DIR)) return NextResponse.json({ error: 'Path outside allowlist' }, { status: 400 });
 
-    const data = await fs.readFile(abs);
+    const data = await fs.readFile(abs, 'utf8');
 
-    if (data.byteLength > MAX_BYTES) return NextResponse.json({ error: 'File too large' }, { status: 413 });
+    // Resolve !include directives
+    const resolvedContent = await resolveIncludes(data, path.dirname(abs));
+
+    if (Buffer.byteLength(resolvedContent) > MAX_BYTES) {
+      return NextResponse.json({ error: 'File too large' }, { status: 413 });
+    }
 
     const krokiBase = process.env.KROKI_BASE_URL ?? 'http://kroki:8000';
 
-    const encoded = await encode(data.toString());
+    const encoded = await encode(resolvedContent);
     const url = `${krokiBase}/${kind}/svg/${encoded}`;
 
     const r = await fetch(url, {
