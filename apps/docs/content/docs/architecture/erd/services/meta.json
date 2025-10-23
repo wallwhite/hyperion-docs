@@ -1,0 +1,8 @@
+{
+  "title": "ERD Services",
+  "description": "ERD services documentation",
+  "pages": [
+    "billing",
+    "product"
+  ]
+}

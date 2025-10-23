@@ -27,6 +27,41 @@ const encode = async (str: string) => {
   return Buffer.from(compressed).toString('base64').replaceAll('+', '-').replaceAll('/', '_');
 };
 
+const resolveIncludes = async (content: string, baseDir: string): Promise<string> => {
+  const includeRegex = /^!include\s+(.+)$/gm;
+  let resolved = content;
+  let match;
+
+  while ((match = includeRegex.exec(content)) !== null) {
+    const includePath = match[1].trim();
+    const fullPath = path.resolve(baseDir, includePath);
+
+    // Security check
+    if (!fullPath.startsWith(BASE_DIR)) {
+      throw new Error(`Include path outside allowlist: ${includePath}`);
+    }
+
+    try {
+      let includeContent = await fs.readFile(fullPath, 'utf8');
+      
+      // Remove @startuml, @enduml, and !theme from included files to avoid conflicts
+      includeContent = includeContent
+        .replace(/^@startuml\s*$/gm, '')
+        .replace(/^@enduml\s*$/gm, '')
+        .replace(/^!theme\s+.+$/gm, '');
+      
+      // Recursively resolve includes in the included file
+      const resolvedInclude = await resolveIncludes(includeContent, path.dirname(fullPath));
+      resolved = resolved.replace(match[0], resolvedInclude);
+    } catch (error) {
+      console.error(`Failed to include file: ${includePath}`, error);
+      throw new Error(`Failed to include file: ${includePath}`);
+    }
+  }
+
+  return resolved;
+};
+
 export const GET = async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
@@ -41,13 +76,18 @@ export const GET = async (req: NextRequest) => {
 
     if (!abs.startsWith(BASE_DIR)) return NextResponse.json({ error: 'Path outside allowlist' }, { status: 400 });
 
-    const data = await fs.readFile(abs);
+    const data = await fs.readFile(abs, 'utf8');
 
-    if (data.byteLength > MAX_BYTES) return NextResponse.json({ error: 'File too large' }, { status: 413 });
+    // Resolve !include directives
+    const resolvedContent = await resolveIncludes(data, path.dirname(abs));
+
+    if (Buffer.byteLength(resolvedContent) > MAX_BYTES) {
+      return NextResponse.json({ error: 'File too large' }, { status: 413 });
+    }
 
     const krokiBase = process.env.KROKI_BASE_URL ?? 'http://kroki:8000';
 
-    const encoded = await encode(data.toString());
+    const encoded = await encode(resolvedContent);
     const url = `${krokiBase}/${kind}/svg/${encoded}`;
 
     const r = await fetch(url, {

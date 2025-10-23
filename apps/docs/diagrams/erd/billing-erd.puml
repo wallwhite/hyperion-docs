@@ -1,0 +1,38 @@
+@startuml
+!theme plain
+
+package "Billing Service" as BillingService {
+    entity Customer {
+        id : UUID
+        email : String
+        name : String
+    }
+
+    entity Order {
+        id : UUID
+        product_id : UUID
+        customer_id : UUID
+        total_amount : Decimal
+        status : OrderStatus
+    }
+
+    entity Invoice {
+        id : UUID
+        order_id : UUID
+        amount_due : Decimal
+        status : InvoiceStatus
+    }
+
+    entity Payment {
+        id : UUID
+        invoice_id : UUID
+        amount : Decimal
+        status : PaymentStatus
+    }
+
+    ' Relationships
+    Customer::id ||--o{ Order::customer_id : "1:N"
+    Order::id ||--o{ Invoice::order_id : "1:N"
+    Invoice::id ||--o{ Payment::invoice_id : "1:N"
+}
+@enduml

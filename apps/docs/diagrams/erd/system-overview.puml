@@ -1,0 +1,9 @@
+@startuml
+!theme plain
+
+!include billing-erd.puml
+!include product-erd.puml
+
+' Cross-service relationships - Product to Billing
+BillingService.Order::product_id ||--o{ ProductService.Product::id
+@enduml

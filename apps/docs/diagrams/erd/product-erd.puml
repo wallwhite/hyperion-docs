@@ -1,0 +1,55 @@
+@startuml
+!theme plain
+
+package "Product Service" as ProductService {
+    entity Product {
+        id : UUID
+        name : String
+        description : Text
+        sku : String
+        price : Decimal
+        status : ProductStatus
+        category_id : UUID
+        created_at : DateTime
+        updated_at : DateTime
+    }
+
+    entity Category {
+        id : UUID
+        name : String
+        description : Text
+        parent_id : UUID
+        active : Boolean
+        created_at : DateTime
+        updated_at : DateTime
+    }
+
+    entity ProductVariant {
+        id : UUID
+        product_id : UUID
+        name : String
+        sku : String
+        price : Decimal
+        stock_quantity : Integer
+        active : Boolean
+        created_at : DateTime
+        updated_at : DateTime
+    }
+
+    entity Inventory {
+        id : UUID
+        product_id : UUID
+        variant_id : UUID
+        quantity : Integer
+        available_quantity : Integer
+        created_at : DateTime
+        updated_at : DateTime
+    }
+
+    ' Relationships
+    Category::id ||--o{ Product::category_id : "1:N"
+    Category::id ||--o{ Category::parent_id : "1:N"
+    Product::id ||--o{ ProductVariant::product_id : "1:N"
+    ProductVariant::id ||--o{ Inventory::variant_id : "1:N"
+}
+@enduml
