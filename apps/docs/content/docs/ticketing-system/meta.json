@@ -1,0 +1,9 @@
+{
+  "title": "Ticketing System",
+  "description": "Architecture documentation for Concert Ticketing System.",
+  "pages": [
+    "index",
+    "glossary",
+    "c4"
+  ]
+}

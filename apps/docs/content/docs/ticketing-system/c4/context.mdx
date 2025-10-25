@@ -1,0 +1,51 @@
+---
+title: Level 1 - System Context
+description: High-level system context diagram for Concert Ticketing System
+---
+
+# System Context Diagram
+
+This C4 Context diagram shows the high-level view of the Concert Ticketing System, including all actors and external system integrations.
+
+<Diagram
+  lang="mermaid"
+  chart="
+C4Context
+    title System Context diagram for Concert Ticketing System
+
+    Person(visitor, 'Visitor', 'Not authenticated user who browses available concerts and tickets')
+    Person(customer, 'Customer', 'Authenticated user who purchases and manages tickets')
+    Person(admin, 'Admin', 'Manages the system, users, and configurations')
+    Person(manager, 'Manager', 'Adds and manages concert tickets and events')
+
+    System(ticketingSystem, 'Concert Ticketing System', 'Allows users to browse, purchase, and manage concert tickets')
+
+    System_Ext(ticketProviders, 'Ticket Providers', 'External ticket inventory and availability systems')
+    System_Ext(paymentSystems, 'Payment Systems', 'External payment processing services (Stripe, PayPal)')
+    System_Ext(analytics, 'Analytics', 'Analytics and monitoring systems for user behavior and sales data')
+
+    Rel(visitor, ticketingSystem, 'Browses concerts and tickets', 'HTTPS')
+    Rel(customer, ticketingSystem, 'Purchases and manages tickets', 'HTTPS')
+    Rel(admin, ticketingSystem, 'Administers system and users', 'HTTPS')
+    Rel(manager, ticketingSystem, 'Manages events and tickets', 'HTTPS')
+
+    Rel(ticketingSystem, ticketProviders, 'Retrieves ticket inventory and availability', 'HTTPS/API')
+    Rel(ticketingSystem, paymentSystems, 'Processes payments', 'HTTPS/API')
+    Rel(ticketingSystem, analytics, 'Sends events and metrics', 'HTTPS/API')
+
+    UpdateLayoutConfig($c4ShapeInRow='3', $c4BoundaryInRow='1')
+"
+/>
+
+## Actors
+
+- **[Visitor](../glossary/actors)**: Not authenticated user who browses available concerts and tickets
+- **[Customer](../glossary/actors)**: Authenticated user who purchases and manages tickets
+- **[Admin](../glossary/actors)**: Manages the system, users, and configurations
+- **[Manager](../glossary/actors)**: Adds and manages concert tickets and events
+
+## External Systems
+
+- **[Ticket Providers](../glossary/external-systems)**: External ticket inventory and availability systems
+- **[Payment Systems](../glossary/external-systems)**: External payment processing services (Stripe, PayPal)
+- **[Analytics](../glossary/external-systems)**: Analytics and monitoring systems for user behavior and sales data

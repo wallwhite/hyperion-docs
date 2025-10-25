@@ -1,0 +1,8 @@
+{
+  "title": "Glossary",
+  "description": "Definitions of actors and systems in the Concert Ticketing System.",
+  "pages": [
+    "actors",
+    "external-systems"
+  ]
+}
