@@ -1,0 +1,21 @@
+@startuml
+
+actor anonymous
+
+
+anonymous -> CustomerPortal: Request Home Page
+CustomerPortal -> CustomerBFF: Home Page Request
+
+CustomerBFF --> OauthService
+CustomerBFF --> ProductService
+CustomerBFF --> OfferingService
+CustomerBFF --> Blog
+
+CustomerBFF -> Review
+
+
+CustomerBFF -> CustomerPortal: 200
+CustomerPortal -> anonymous: 200
+
+
+@enduml

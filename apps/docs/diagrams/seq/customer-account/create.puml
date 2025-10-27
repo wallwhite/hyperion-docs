@@ -1,0 +1,20 @@
+@startuml
+
+actor Anonymous
+
+participant "[[../../openapi/createPlanet Create User]]" as CustomerPortal
+participant "Customer BFF" as CustomerBFF
+participant "Customer API" as CustomerAPI
+
+
+Anonymous -> CustomerPortal: Request Create Customer
+CustomerPortal -> CustomerBFF: Create Customer Request
+CustomerBFF -> CustomerAPI:  [[http://localhost:3000/docs/openapi/createUser Create User]]
+CustomerAPI -> CustomerBFF: 204
+note right of CustomerBFF
+  email not confirmed
+end note
+CustomerBFF -> CustomerPortal: 204
+CustomerPortal -> Anonymous: 204
+
+@enduml

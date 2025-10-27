@@ -1,0 +1,62 @@
+---
+title: Overview 
+description: Sequence diagrams showing interactions between system components
+---
+
+# Sequence Diagrams
+
+Sequence diagrams provide a visual representation of how objects interact in a particular scenario of a system. They show the flow of messages between different components or services over time, making it easier to understand the dynamic behavior of a system.
+
+## Features
+
+### 📊 Visual Message Flow
+
+Sequence diagrams illustrate the chronological order of messages exchanged between different actors (users, systems, services, databases, etc.) in a particular scenario.
+
+### 🎯 Use Cases
+
+- **API Interactions**: Document how different services communicate during API requests
+- **Authentication Flows**: Show the step-by-step process of user authentication
+- **Transaction Processing**: Visualize payment or transaction workflows
+- **Data Synchronization**: Demonstrate how data flows between systems
+- **Error Handling**: Document exception and error handling scenarios
+
+### 🛠️ Supported Tools
+
+This documentation supports sequence diagrams using:
+
+- **Mermaid** - For inline sequence diagrams directly in MDX
+- **PlantUML** - For more complex sequence diagrams with advanced features
+
+## Available Sequence Diagrams
+
+### Account
+
+- [Create Customer](account/create-customer) - Sequence diagram for customer creation flow
+
+## How It Works
+
+Sequence diagrams in this documentation are rendered using the same diagram-as-code approach as other diagrams in the system. Click on any diagram to open it in a full-screen zoomable viewer.
+
+### Example Structure
+
+```
+sequenceDiagram
+    participant A as Actor
+    participant B as Service
+    participant C as Database
+    
+    A->>B: Request
+    B->>C: Query
+    C-->>B: Response
+    B-->>A: Result
+```
+
+## Best Practices
+
+1. **Clear Actor Names**: Use descriptive names for participants
+2. **Message Flow**: Show both request and response flows when applicable
+3. **Activation Boxes**: Use activation boxes to show when an object is active
+4. **Loops and Conditions**: Use appropriate syntax for loops and conditional flows
+5. **Error Handling**: Include error scenarios to document exception handling
+6. **Time Ordering**: Arrange messages chronologically from top to bottom

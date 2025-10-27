@@ -1,0 +1,20 @@
+@startuml
+
+actor Admin
+participant "Admin Portal" as AdminPortal
+participant "Admin BFF" as AdminBFF
+participant "Customer" as CustomerService
+
+Admin -> AdminPortal: Request Deactivate Customer List
+AdminPortal -> AdminBFF: Deactivate Customer List Request
+AdminBFF -> AdminBFF:  Search Customer By Cache
+
+AdminBFF -> CustomerService: Check Customer By Id
+CustomerService -> DB:  Search Customer By Id
+CustomerService -> AdminBFF: 204 or 404
+
+AdminBFF -> AdminPortal: 204
+AdminPortal -> Admin: 204
+
+
+@enduml
