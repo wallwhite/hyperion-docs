@@ -1,0 +1,14 @@
+@startuml
+@startwbs
+
+* Tickend Send email 14 days
+
+** if license due date 15 days worker not get id
+*** я тут 
+
+
+** Якщо там не було ids - ми просто закінчити 
+** Якщо там було 100000 елеменітв то всі витягнулись
+
+@endwbs
+@enduml

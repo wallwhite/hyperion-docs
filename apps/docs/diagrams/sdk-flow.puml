@@ -1,0 +1,8 @@
+@startuml
+
+CronJob -> Billing: get license ids when due date = 14 days
+Billing -> CronJob: [ids]
+CronJob -> Rab
+Rab -> CronJob
+
+@enduml

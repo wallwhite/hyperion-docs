@@ -1,0 +1,27 @@
+@startuml
+
+Que <- Worker
+Que -> Worker
+Worker -> LicenseService: get License by id 
+LicenseService -> Worker
+
+
+Worker -> OAuth: Get Customer by id 
+OAuth --> Worker: Response Customer Info
+Worker --> Billing: Get ORder Detail
+Billing -> Worker: Response Order Info
+Worker --> ProductService: Get Product Info
+ProductService -> Worker: Response Product Info
+
+
+Worker -> Billing: Get Price Hike Order
+alt Price Hike - yes  
+Worker -> Billing: upgrade plan to Hide
+Billing -> Worker
+end 
+
+
+Worker -> Mail: send email (тут лінкуємо до діаграми які вісилаються емейли )
+
+
+@enduml
