@@ -11,5 +11,5 @@ coverage/
 .vercel
 .source
 .map
-
+.idea
 apps/docs/content/**/(generated)/**
