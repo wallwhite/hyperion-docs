@@ -5,7 +5,6 @@ services:
       dockerfile: apps/docs/Dockerfile
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
       - KROKI_BASE_URL=http://kroki:8000
       - WATCHPACK_POLLING=true
     ports:

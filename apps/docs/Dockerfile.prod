@@ -1,0 +1,64 @@
+# Stage 1: Base image with dependencies
+FROM node:22-alpine AS base
+
+# Install security updates and dumb-init
+RUN apk upgrade --no-cache && \
+    apk add --no-cache dumb-init
+
+# Enable corepack for pnpm
+RUN corepack enable && corepack prepare pnpm@10 --activate
+
+WORKDIR /app
+
+# Copy package manager files
+COPY pnpm-workspace.yaml pnpm-lock.yaml .npmrc package.json turbo.json ./
+
+# Copy only necessary workspace files for dependency installation
+COPY apps/docs/package.json ./apps/docs/package.json
+
+# Stage 2: Build stage with all dependencies
+FROM base AS builder
+
+# Copy source code
+COPY apps/docs/ ./apps/docs/
+
+# Install all dependencies (including dev dependencies for building)
+RUN pnpm install --frozen-lockfile
+
+# Generate OpenAPI docs and build the application
+RUN pnpm build:openapi && \
+    pnpm turbo build --filter=docs
+
+# Stage 3: Production runner
+FROM node:22-alpine AS runner
+
+# Install security updates and dumb-init
+RUN apk upgrade --no-cache && \
+    apk add --no-cache dumb-init
+
+# Create non-root user for running the application
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+WORKDIR /app
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=3000 \
+    NEXT_TELEMETRY_DISABLED=1
+
+# Copy standalone output and static files
+COPY --from=builder --chown=nextjs:nodejs /app/apps/docs/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/docs/.next/static ./apps/docs/.next/static
+
+# Expose port
+EXPOSE 3000
+
+# Switch to non-root user
+USER nextjs
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "apps/docs/server.js"]

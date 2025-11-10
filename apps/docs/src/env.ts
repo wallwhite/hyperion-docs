@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 const COMMON_FIELDS = {
   NEXT_PUBLIC_IS_PROD: z.boolean(),
-  NEXT_PUBLIC_APP_URL: z.url(),
 } as const;
 
 const SERVER_FIELDS = {
@@ -37,14 +36,12 @@ export const SERVER_ENV = () => {
 
   return createEnv(SERVER_ENV_SCHEMA, {
     KROKI_BASE_URL: process.env.KROKI_BASE_URL ?? '',
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? '',
     NEXT_PUBLIC_IS_PROD: process.env.NODE_ENV === 'production',
   });
 };
 
 export const CLIENT_ENV = () => {
   return createEnv(CLIENT_ENV_SCHEMA, {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? '',
     NEXT_PUBLIC_IS_PROD: process.env.NODE_ENV === 'production',
   });
 };

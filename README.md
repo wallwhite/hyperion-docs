@@ -60,6 +60,23 @@ pnpm stop
 ./scripts/stop.sh
 ```
 
+## Run in production
+
+### Build production image
+```bash
+docker build . -f apps/docs/Dockerfile.prod -t archipelago
+```
+It will build production-optimized image with all dependencies installed.
+
+### Run docker container
+```bash
+docker run --env KROKI_BASE_URL=https://kroki.io -p 3000:3000 archipelago
+```
+Now you can see docs on **http://localhost:3000**.
+
+Please note that you need to set `KROKI_BASE_URL` to your Kroki instance. Here we set it to `https://kroki.io`, 
+what is public instance of Kroki but it could be insecure or unavailable to use in your production.
+
 ## Project Structure
 
 ```
