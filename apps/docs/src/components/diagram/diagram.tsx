@@ -1,12 +1,13 @@
 'use client';
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 import { ExpandIcon, LoaderIcon } from 'lucide-react';
 import { LANG_NAME_MAP, SupportedLanguages } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { GraphvizIcon, MermaidIcon, PlantumlIcon } from '../icons';
 import { useModal } from '../modal-launcher';
 import { PreviewModal } from '../preview-modal';
+import { ExportMenu } from './export-menu';
 import { useSvgDiagramMarkup } from './hooks';
 import { type DiagramParams } from './types';
 
@@ -21,6 +22,7 @@ const IconMap = {
 };
 
 export const Diagram = forwardRef<HTMLDivElement, DiagramProps>(({ lang, path, className, chart }, ref) => {
+  const diagramId = useId();
   const { svg, isLoading } = useSvgDiagramMarkup({ lang, path, chart });
 
   const modal = useModal(PreviewModal);
@@ -47,14 +49,17 @@ export const Diagram = forwardRef<HTMLDivElement, DiagramProps>(({ lang, path, c
             <Icon className="size-4" />
             {LANG_NAME_MAP[lang as keyof typeof LANG_NAME_MAP]} Diagram Preview
           </div>
-          <button
-            type="button"
-            className="group flex items-center gap-2 bg-zinc-300 hover:bg-zinc-400/50 p-2 rounded-md text-zinc-700 text-xs transition-colors duration-200 cursor-pointer"
-            onClick={handleOpenWhiteboardModal}
-          >
-            <ExpandIcon className="size-3 group-hover:scale-120 transition-transform duration-200" />
-            Open Whiteboard
-          </button>
+          <div className="flex items-center gap-2">
+            <ExportMenu svg={svg} diagramId={diagramId} />
+            <button
+              type="button"
+              className="group flex items-center gap-2 bg-zinc-300 hover:bg-zinc-400/50 p-2 rounded-md text-zinc-700 text-xs transition-colors duration-200 cursor-pointer"
+              onClick={handleOpenWhiteboardModal}
+            >
+              <ExpandIcon className="size-3 group-hover:scale-120 transition-transform duration-200" />
+              Open Whiteboard
+            </button>
+          </div>
         </div>
       )}
       {!!isLoading && (
@@ -63,6 +68,7 @@ export const Diagram = forwardRef<HTMLDivElement, DiagramProps>(({ lang, path, c
         </div>
       )}
       <div
+        data-diagram-id={diagramId}
         className="flex justify-center items-center w-full [&>svg]:!w-full h-full [&>svg]:!h-auto"
         dangerouslySetInnerHTML={{ __html: svg }}
       />
