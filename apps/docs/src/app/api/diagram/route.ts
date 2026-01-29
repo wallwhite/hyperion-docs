@@ -14,6 +14,7 @@ const LANG_MAP: Record<string, string> = {
   c4plantuml: 'c4plantuml',
 };
 const MAX_BYTES = 256 * 1024;
+const MAX_URI_LENGTH = Number(process.env.KROKI_MAX_URI_LENGTH) || 4096;
 
 export const revalidate = 3600;
 
@@ -107,11 +108,21 @@ export const GET = async (req: NextRequest) => {
     const krokiBase = process.env.KROKI_BASE_URL ?? 'http://kroki:8000';
 
     const encoded = await encode(resolvedContent);
-    const url = `${krokiBase}/${kind}/svg/${encoded}`;
+    const svgUrl = `${krokiBase}/${kind}/svg`
+    const getUrl = `${svgUrl}/${encoded}`;
 
-    const r = await fetch(url, {
-      method: 'get',
-    });
+    let r: Response;
+    if (getUrl.length <= MAX_URI_LENGTH) {
+      r = await fetch(getUrl, {
+        method: 'GET',
+      });
+    } else {
+      r = await fetch(svgUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: resolvedContent,
+      });
+    }
 
     if (!r.ok) return NextResponse.json({ error: `Kroki failed: ${r.status}` }, { status: 502 });
 
