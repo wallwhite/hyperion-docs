@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant Client
+    participant Docs
+    participant API
+    participant Kroki
+    Client->>Docs: Request page
+    Docs->>API: Fetch diagram
+    API->>Kroki: Render PlantUML
+    Kroki->>API: Return SVG
+    API->>Docs: Return image
+    Docs->>Client: Display page
