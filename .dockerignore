@@ -1,0 +1,71 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage
+.nyc_output
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+__tests__
+__mocks__
+
+# Build outputs
+.next
+.turbo
+out
+dist
+build
+
+# Development files
+.env*.local
+.env.development
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git
+.gitignore
+.gitattributes
+.github
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs
+*.md
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+.circleci
+.github
+
+# Logs
+logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# Misc
+.eslintcache
+.prettierrc
+.editorconfig
