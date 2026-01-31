@@ -6,6 +6,7 @@ const COMMON_FIELDS = {
 
 const SERVER_FIELDS = {
   KROKI_BASE_URL: z.string().min(1),
+  API_RES_PATH: z.string().min(1),
 } as const;
 
 const CLIENT_ENV_SCHEMA = z.object({
@@ -35,8 +36,9 @@ export const SERVER_ENV = () => {
   }
 
   return createEnv(SERVER_ENV_SCHEMA, {
-    KROKI_BASE_URL: process.env.KROKI_BASE_URL ?? '',
     NEXT_PUBLIC_IS_PROD: process.env.NODE_ENV === 'production',
+    KROKI_BASE_URL: process.env.KROKI_BASE_URL ?? 'https://kroki.io',
+    API_RES_PATH: process.env.API_RES_PATH ?? 'openapi',
   });
 };
 

@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["API_RES_PATH"],
     },
     "dev": {
       "persistent": true,
@@ -28,7 +29,8 @@
     },
     "build:api-doc": {
       "dependsOn": ["^build:api-doc"],
-      "outputs": ["apps/docs/content/docs/openapi/**"],
+      "outputs": ["apps/docs/content/docs/**"],
+      "env": ["API_RES_PATH"],
       "cache": false
     }
   }
