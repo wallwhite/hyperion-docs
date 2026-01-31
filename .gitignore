@@ -12,4 +12,7 @@ coverage/
 .source
 .map
 .idea
+.vscode
+.history
+.github
 apps/docs/content/**/(generated)/**

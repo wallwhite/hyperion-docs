@@ -9,7 +9,8 @@
     "typecheck": "turbo typecheck",
     "typegen": "turbo typegen",
     "postinstall": "pnpm typegen",
-    "build:openapi": "turbo build:openapi"
+    "build:openapi": "turbo build:openapi",
+    "build:api-doc": "turbo build:api-doc"
   },
   "devDependencies": {
     "@spellix/eslint-config": "^4.0.3",

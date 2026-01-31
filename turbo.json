@@ -25,6 +25,11 @@
       "dependsOn": ["^build:openapi"],
       "outputs": ["apps/docs/content/docs/openapi/**"],
       "cache": false
+    },
+    "build:api-doc": {
+      "dependsOn": ["^build:api-doc"],
+      "outputs": ["apps/docs/content/docs/openapi/**"],
+      "cache": false
     }
   }
 }
