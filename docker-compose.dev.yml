@@ -5,6 +5,7 @@ services:
       dockerfile: apps/docs/Dockerfile
     environment:
       - NODE_ENV=development
+      - API_RES_PATH=openapi
       - KROKI_BASE_URL=http://kroki:8000
       - WATCHPACK_POLLING=true
     ports:
