@@ -1,0 +1,8 @@
+{
+  "title": "Web Client",
+  "pages": [
+    "user-login",
+    "teacher-add-activity",
+    "guest-view-statistics"
+  ]
+}

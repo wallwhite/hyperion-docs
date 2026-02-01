@@ -1,0 +1,5 @@
+{
+  "title": "Platform",
+  "root": true,
+  "pages": ["index", "contributing", "guides"]
+}

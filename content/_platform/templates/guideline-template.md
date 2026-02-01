@@ -1,0 +1,136 @@
+# Guideline Documentation Template
+
+Use this template for step-by-step technical instructions.
+
+## When to Use
+
+Create a guideline for:
+- How to integrate tracing in PHP
+- Data isolation implementation guide
+- Setting up local development environment
+- Deploying to production
+
+## Template
+
+```mdx
+---
+title: Guideline Name
+description: Step-by-step guide for [topic]
+---
+
+# Guideline: [Topic]
+
+## Overview
+Brief description of what this guideline covers and who should use it.
+
+## Prerequisites
+What you need before following this guideline:
+
+- Required knowledge
+- Tools to install
+- Access requirements
+- Dependencies
+
+## Step-by-Step Instructions
+
+### Step 1: [Task Name]
+
+**Objective**: What you'll accomplish in this step
+
+**Instructions**:
+
+1. Detailed instruction 1
+   \`\`\`language
+   // Code example
+   \`\`\`
+
+2. Detailed instruction 2
+   \`\`\`language
+   // Code example
+   \`\`\`
+
+3. Detailed instruction 3
+
+**Expected Result**: What you should see after completing this step
+
+**Troubleshooting**:
+- **Issue**: Solution
+- **Issue**: Solution
+
+### Step 2: [Task Name]
+[Continue pattern...]
+
+## Code Examples
+
+### Example 1: [Scenario Name]
+
+\`\`\`language
+// Complete working example
+\`\`\`
+
+**Explanation**: What this code does and why
+
+### Example 2: [Scenario Name]
+[Continue pattern...]
+
+## Best Practices
+
+- **Practice 1**: Explanation
+- **Practice 2**: Explanation
+- **Practice 3**: Explanation
+
+## Common Pitfalls
+
+### Pitfall 1: [Description]
+**Problem**: What goes wrong
+**Solution**: How to fix or avoid it
+
+### Pitfall 2: [Description]
+[Continue pattern...]
+
+## Testing & Validation
+
+How to verify your implementation:
+
+\`\`\`language
+// Test code or validation steps
+\`\`\`
+
+## References
+- Related guidelines
+- API documentation
+- External resources
+
+## Version History
+- **Version**: Date - Changes made
+```
+
+## Best Practices
+
+- **Step-by-step**: Break down complex tasks into simple, sequential steps
+- **Code examples**: Provide complete, working code samples
+- **Screenshots**: Include visual aids when helpful (for UI-related tasks)
+- **Troubleshooting**: Anticipate common issues and provide solutions
+- **Keep updated**: Review and update as tools/APIs change
+- **Test instructions**: Verify all steps work before publishing
+- **Prerequisites**: List all requirements upfront
+- **Expected results**: Tell readers what success looks like at each step
+
+## File Location
+
+Place guidelines in: `/guidelines/{topic}/`
+
+Examples:
+- `/guidelines/data-isolation/php-integration.mdx`
+- `/guidelines/tracing/setup-guide.mdx`
+
+### Sub-categories
+For related guidelines, use subdirectories:
+
+```
+/guidelines/
+└── data-isolation/
+    ├── php-integration.mdx
+    ├── go-integration.mdx
+    └── e2e-integration.mdx
+```

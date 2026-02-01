@@ -1,0 +1,93 @@
+@startuml
+!include /plantuml/themes/puml-theme-x-light.puml
+
+title User Login Flow (Planned Design)
+
+actor "User" as User
+participant "React SPA" as SPA
+participant "AuthController" as Auth
+participant "AuthService" as AuthSvc
+participant "UserRepository" as UserRepo
+database "PostgreSQL" as DB
+participant "Valkey (Redis)" as Redis
+
+note over Auth, Redis #FFAAAA
+  **NOT YET IMPLEMENTED**
+  This diagram shows the planned design per ADR-003.
+  Currently, no authentication is enforced.
+end note
+
+== Login ==
+
+User -> SPA: Enter email & password
+activate SPA
+
+SPA -> Auth: POST /api/v1/auth/login\n{email, password}
+activate Auth
+
+Auth -> AuthSvc: authenticate(email, password)
+activate AuthSvc
+
+AuthSvc -> UserRepo: findByEmail(email)
+activate UserRepo
+UserRepo -> DB: SELECT * FROM users WHERE email = ?
+DB --> UserRepo: User entity
+UserRepo --> AuthSvc: User
+deactivate UserRepo
+
+alt Invalid credentials
+    AuthSvc --> Auth: throw UnauthorizedException
+    Auth --> SPA: 401 Unauthorized
+    SPA --> User: Show error message
+else Valid credentials
+    AuthSvc -> AuthSvc: validatePassword(input, stored)
+    AuthSvc -> AuthSvc: generateAccessToken(user)\n[expires: 30 min]
+    AuthSvc -> AuthSvc: generateRefreshToken(user)\n[expires: 30 days]
+
+    AuthSvc -> Redis: SET refresh:{userId} token\n[TTL: 30 days]
+    activate Redis
+    Redis --> AuthSvc: OK
+    deactivate Redis
+
+    AuthSvc --> Auth: TokenResponse
+    deactivate AuthSvc
+
+    Auth --> SPA: 200 OK\n{accessToken, refreshToken,\nuser: {id, role, ...}}
+    deactivate Auth
+
+    SPA -> SPA: Store tokens in memory/localStorage
+    SPA --> User: Redirect to dashboard\nbased on user.role
+    deactivate SPA
+end
+
+== Token Refresh ==
+
+User -> SPA: Access protected page\n(access token expired)
+activate SPA
+
+SPA -> Auth: POST /api/v1/auth/refresh\n{refreshToken}
+activate Auth
+
+Auth -> AuthSvc: refreshTokens(refreshToken)
+activate AuthSvc
+
+AuthSvc -> Redis: GET refresh:{userId}
+activate Redis
+Redis --> AuthSvc: stored token
+deactivate Redis
+
+alt Token invalid or expired
+    AuthSvc --> Auth: throw UnauthorizedException
+    Auth --> SPA: 401 Unauthorized
+    SPA --> User: Redirect to login
+else Token valid
+    AuthSvc -> AuthSvc: generateNewAccessToken(user)
+    AuthSvc --> Auth: TokenResponse
+    deactivate AuthSvc
+    Auth --> SPA: 200 OK {accessToken}
+    deactivate Auth
+    SPA --> User: Continue to page
+    deactivate SPA
+end
+
+@enduml

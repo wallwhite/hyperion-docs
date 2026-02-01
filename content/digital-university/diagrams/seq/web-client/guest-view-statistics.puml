@@ -1,0 +1,74 @@
+@startuml
+!include /plantuml/themes/puml-theme-x-light.puml
+
+title Guest Views Teacher Statistics (Planned Design)
+
+actor "Guest" as Guest
+participant "React SPA" as SPA
+participant "PublicUserController" as PubCtrl
+participant "StatisticsService" as StatsSvc
+participant "ActivityRepository" as ActRepo
+participant "UserActivityRepository" as UARepo
+database "PostgreSQL" as DB
+
+note over StatsSvc #FFAAAA
+  **NOT YET IMPLEMENTED**
+  OpenAPI spec declares Statistics endpoints
+  but no implementation exists.
+end note
+
+== Browse Teacher Directory ==
+
+Guest -> SPA: Navigate to public directory
+activate SPA
+
+SPA -> PubCtrl: GET /api/v1/public/users\n?page=0&size=20
+activate PubCtrl
+
+PubCtrl -> DB: SELECT users with basic info
+DB --> PubCtrl: List<UserSummary>
+PubCtrl --> SPA: 200 OK\n{content: [...], page: {...}}
+deactivate PubCtrl
+
+SPA --> Guest: Display teacher list
+deactivate SPA
+
+== View Teacher Statistics ==
+
+Guest -> SPA: Select teacher to view
+activate SPA
+
+SPA -> PubCtrl: GET /api/v1/public/users/{teacherId}/statistics\n?yearFrom=2024&yearTo=2025
+activate PubCtrl
+
+PubCtrl -> StatsSvc: getTeacherStatistics(teacherId, yearFrom, yearTo)
+activate StatsSvc
+
+StatsSvc -> UARepo: findByUserId(teacherId)
+activate UARepo
+UARepo -> DB: SELECT activities via user_activities JOIN
+DB --> UARepo: List<UserActivity>
+UARepo --> StatsSvc: activities
+deactivate UARepo
+
+StatsSvc -> StatsSvc: groupByWorksType(activities)
+StatsSvc -> StatsSvc: calculateRatings(activities)\nusing ActivityDetails coefficients
+
+note right of StatsSvc
+  Rating calculation per Solution Design 002:
+  - Sum points by work type
+  - Apply coefficients from activity_details
+  - Aggregate by semester/year
+end note
+
+StatsSvc --> PubCtrl: StatisticsResponse
+deactivate StatsSvc
+
+PubCtrl --> SPA: 200 OK\n{totalRating, breakdown: {\n  SCIENCE: x,\n  METHOD: y,\n  ORGANIZATIONAL: z\n}}
+deactivate PubCtrl
+
+SPA -> SPA: Render charts\n(Recharts line/bar)
+SPA --> Guest: Display statistics dashboard
+deactivate SPA
+
+@enduml

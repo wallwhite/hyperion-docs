@@ -12,7 +12,7 @@ services:
       - "3000:3000"
     volumes:
       - ./apps/docs:/app/apps/docs
-      - ./apps/docs/diagrams:/app/apps/docs/diagrams
+      - ./content:/app/content
       - /app/apps/docs/.next
       - root_node_modules:/app/node_modules
       - docs_node_modules:/app/apps/docs/node_modules

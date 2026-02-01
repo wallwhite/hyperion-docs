@@ -1,0 +1,20 @@
+---
+title: Component Diagram
+description: Internal structure of the API Server container showing controllers, services, and repositories
+---
+
+import { Diagram } from "@/components/diagram";
+
+> **Note**: Gray components are **planned but not yet implemented**.
+
+<Diagram
+  lang="c4plantuml"
+  path="digital-university/diagrams/c4/api-components.puml"
+  alt="C3 Component diagram showing API Server internal architecture with controllers, services, and repositories"
+/>
+
+## Key Points
+
+- **Authentication (AuthController, AuthService)**: Designed in [ADR-003](/docs/digital-university/architecture/adr/ADR-003-authentication-strategy), not yet implemented
+- **Statistics**: OpenAPI spec declares Statistics tag but no endpoints exist yet
+- **Public Controllers**: Provide read-only access without authentication for guest users

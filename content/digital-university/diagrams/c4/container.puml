@@ -1,0 +1,32 @@
+@startuml
+!include <C4/C4_Container>
+
+title NPP Portal - Container Diagram
+
+Person(guest, "Guest", "Public visitor")
+Person(teacher, "Teacher", "Faculty member")
+Person(director, "Director", "Department head")
+Person(admin, "Administrator", "System admin")
+
+System_Boundary(npp, "NPP Portal") {
+    Container(spa, "Web Application", "React, TypeScript, Vite", "Single-page application providing UI for all users")
+    Container(api, "API Server", "Spring Boot, Java 21", "REST API handling business logic, authentication, and data access")
+    Container(redis, "Cache & Session Store", "Redis", "Stores refresh tokens, caches frequently accessed data")
+    ContainerDb(db, "Database", "PostgreSQL 15", "Stores users, activities, organization structure, dictionaries")
+}
+
+System_Ext(email, "Email System", "SMTP server for notifications")
+
+Rel(guest, spa, "Views public pages", "HTTPS")
+Rel(teacher, spa, "Manages profile & activities", "HTTPS")
+Rel(director, spa, "Views statistics", "HTTPS")
+Rel(admin, spa, "Administers system", "HTTPS")
+
+Rel(spa, api, "Makes API calls", "HTTPS/JSON")
+
+Rel(api, db, "Reads/writes data", "JDBC/TCP:5432")
+Rel(api, redis, "Manages tokens & cache", "TCP:6379")
+Rel(api, email, "Sends emails", "SMTP:587")
+
+SHOW_LEGEND()
+@enduml

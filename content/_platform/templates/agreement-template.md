@@ -1,0 +1,99 @@
+# Agreement Documentation Template
+
+Use this template for documenting technical standards and conventions teams agree to follow.
+
+## When to Use
+
+Create an agreement when teams need to agree on:
+- Code style rules (ESLint, Prettier configs)
+- Linter levels (PHPStan level 8)
+- Testing requirements
+- Code review standards
+
+## Template
+
+```mdx
+---
+title: Agreement Name
+description: Brief description of the agreement
+---
+
+# Agreement: [Topic]
+
+## Context
+Why this agreement exists and what problem it solves.
+
+## Scope
+What this agreement covers:
+
+- **Applies to**: Languages, projects, or teams
+- **Effective Date**: When this agreement takes effect
+- **Review Date**: When this should be reviewed
+
+## Standards
+
+### [Standard Category 1]
+
+**Decision**: What we agreed on
+
+**Rationale**: Why we made this choice
+
+**Implementation**:
+\`\`\`language
+// Code example or configuration
+\`\`\`
+
+**Enforcement**: How this is checked (linter rules, CI checks, code review)
+
+### [Standard Category 2]
+[Continue pattern...]
+
+## Exceptions
+When it's acceptable to deviate from these standards:
+
+- **Exception Case 1**: Circumstances and approval process
+- **Exception Case 2**: Circumstances and approval process
+
+## Validation
+How compliance with this agreement is verified:
+
+- Automated checks
+- Code review checklist
+- Testing requirements
+
+## References
+- Related agreements
+- Tool documentation
+- External resources
+
+## Change Log
+- **YYYY-MM-DD**: Initial version
+- **YYYY-MM-DD**: Updated [section] based on [reason]
+```
+
+## Best Practices
+
+- **Be specific**: Provide concrete examples and code samples
+- **Language-specific**: Create separate agreements for each language
+- **Common agreements**: Use `common/` folder for universal standards
+- **Enforcement**: Define how standards are checked and enforced
+- **Living document**: Review and update regularly
+- **Link to ADRs**: Reference architectural decisions that led to standards
+- **Code examples**: Show correct and incorrect examples
+- **Tooling**: Include linter configs, IDE settings when relevant
+
+## File Location
+
+### Language-Specific
+Place in: `/agreements/{lang}/`
+
+Examples:
+- `/agreements/php/coding-standards.mdx`
+- `/agreements/typescript/eslint-rules.mdx`
+
+### Common (All Languages)
+Place in: `/agreements/common/`
+
+Examples:
+- `/agreements/common/git-commit-messages.mdx`
+- `/agreements/common/code-review-checklist.mdx`

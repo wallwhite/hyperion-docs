@@ -1,0 +1,69 @@
+---
+title: Code Review Standards
+description: Standards for code reviews
+---
+
+# Agreement: Code Review Standards
+
+## Context
+
+Code reviews ensure code quality, knowledge sharing, and reduce bugs.
+
+## Scope
+
+- **Applies to**: All code changes in all projects
+- **Effective Date**: YYYY-MM-DD
+- **Review Date**: Quarterly
+
+## Standards
+
+### Review Timing
+
+**Decision**: All pull requests must be reviewed within XX hours
+
+**Rationale**: Prevents blocking developers and maintains velocity
+
+**Enforcement**: PR monitoring, team metrics
+
+### Required Checks
+
+**Decision**: All PRs must pass:
+
+- [ ] Automated tests
+- [ ] Linting
+- [ ] Type checking
+- [ ] At least one approval
+
+**Implementation**:
+
+```yaml
+# GitHub Actions example
+required-checks:
+  - tests
+  - lint
+  - typecheck
+```
+
+### Review Checklist
+
+- [ ] Code follows project conventions
+- [ ] Tests cover new functionality
+- [ ] Documentation updated
+- [ ] No security vulnerabilities
+- [ ] Performance considerations addressed
+
+## Exceptions
+
+- **Hotfix PRs**: May merge with single approval if critical
+- **Documentation-only**: May merge without full review
+
+## Validation
+
+- GitHub branch protection rules
+- Required reviewers
+- Status checks
+
+## References
+
+- GitHub PR template
+- Team coding standards

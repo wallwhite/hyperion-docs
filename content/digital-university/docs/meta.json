@@ -1,0 +1,12 @@
+{
+  "title": "Digital University",
+  "root": true,
+  "pages": [
+    "index",
+    "architecture",
+    "agreements",
+    "process",
+    "openapi",
+    "drafts"
+  ]
+}

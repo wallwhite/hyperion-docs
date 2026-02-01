@@ -1,0 +1,24 @@
+---
+title: User Login
+description: Authentication flow for registered users to receive JWT tokens and role assignment
+---
+
+import { Diagram } from "@/components/diagram";
+
+> **Not Yet Implemented** - This shows the planned design per [ADR-003](/docs/digital-university/architecture/adr/ADR-003-authentication-strategy). Currently authentication is disabled.
+
+<Diagram
+  lang="plantuml"
+  path="digital-university/diagrams/seq/web-client/user-login.puml"
+  alt="Sequence diagram showing user login flow with JWT token generation and role assignment"
+/>
+
+## User Roles
+
+After successful login, the user receives their role which determines available features:
+
+| Role | Access |
+|------|--------|
+| TEACHER | Own profile, activities, statistics |
+| DIRECTOR | Department statistics, activity approval |
+| ADMIN | Full system administration |

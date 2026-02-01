@@ -1,0 +1,12 @@
+{
+  "title": "Architecture",
+  "pages": [
+    "adr",
+    "c4",
+    "erd",
+    "sequence",
+    "solution-designs",
+    "glossary",
+    "strategy"
+  ]
+}

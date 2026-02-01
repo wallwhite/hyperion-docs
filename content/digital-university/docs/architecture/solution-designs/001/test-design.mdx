@@ -1,0 +1,163 @@
+---
+title: "Test Design - Personal Account Module"
+description: Testing strategy for faculty personal account management
+---
+
+# Test Design: Personal Account Module
+
+## Overview
+This test design covers the Personal Account Module including authentication, profile management, department assignments, and public directory features.
+
+## Test Strategy
+
+### Scope
+What will be tested:
+- [x] Authentication flows (login, logout, refresh, password reset)
+- [x] User profile CRUD operations
+- [x] Department assignment management
+- [x] Photo upload and validation
+- [x] Public directory access
+- [x] Role-based access control
+- [x] Input validation and error handling
+
+### Out of Scope
+What will not be tested:
+- [ ] LDAP/SSO integration (not implemented)
+- [ ] Email delivery (mocked)
+- [ ] Browser-specific UI issues
+- [ ] Mobile responsiveness
+
+## Test Levels
+
+### Unit Tests
+**Coverage Target**: 80%
+
+**Focus Areas**:
+- [x] Password hashing and verification
+- [x] JWT token generation and validation
+- [x] User service business logic
+- [x] DTO validation
+- [x] Mapper transformations
+
+**Tools**: JUnit 5, Mockito, AssertJ
+
+### Integration Tests
+**Focus Areas**:
+- [x] REST API endpoints
+- [x] Database operations (JPA)
+- [x] Redis token storage
+- [x] File upload handling
+
+**Test Scenarios**:
+1. Complete authentication cycle (login → access API → refresh → logout)
+2. User creation and assignment to departments
+3. Profile update with photo upload
+4. Public directory search and filtering
+
+**Tools**: Spring Boot Test, TestContainers (PostgreSQL, Redis), MockMvc
+
+### End-to-End Tests
+**User Flows**:
+1. **Teacher Login Flow**: Login → View profile → Update details → Upload photo → Logout
+2. **Admin User Management**: Login as admin → Create user → Assign to department → User receives email
+3. **Public Directory**: Visit directory → Search by name → View public profile
+
+**Tools**: Cypress, Playwright
+
+### Performance Tests
+**Metrics**:
+- Response time: < 200ms for profile operations
+- Throughput: 100 concurrent users
+- Login time: < 500ms including JWT generation
+
+**Load Scenarios**:
+- Normal: 50 concurrent users
+- Peak: 200 concurrent users (semester start)
+- Stress: 500 concurrent users
+
+**Tools**: k6, Gatling
+
+## Test Cases
+
+### Authentication Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| AUTH-001 | Login with valid credentials | 200 OK, returns access + refresh tokens | Critical |
+| AUTH-002 | Login with invalid password | 401 Unauthorized | Critical |
+| AUTH-003 | Login with inactive user | 401 Unauthorized | High |
+| AUTH-004 | Refresh token while valid | 200 OK, new tokens | Critical |
+| AUTH-005 | Refresh with expired token | 401 Unauthorized | High |
+| AUTH-006 | Logout invalidates refresh token | Subsequent refresh fails | High |
+| AUTH-007 | Access API with expired access token | 401 Unauthorized | Critical |
+| AUTH-008 | Password reset sends email | 200 OK, email queued | High |
+| AUTH-009 | Set password with valid token | 200 OK, can login | High |
+| AUTH-010 | Set password with expired token | 400 Bad Request | Medium |
+
+### Profile Management Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| PROF-001 | Get own profile | 200 OK, returns user data | Critical |
+| PROF-002 | Update own profile (name) | 200 OK, data persisted | High |
+| PROF-003 | Update profile with invalid email | 400 Bad Request | High |
+| PROF-004 | Upload valid photo (JPEG) | 200 OK, URL returned | Medium |
+| PROF-005 | Upload oversized photo (>5MB) | 400 Bad Request | Medium |
+| PROF-006 | Upload invalid file type | 400 Bad Request | Medium |
+| PROF-007 | Change password | 200 OK, old password invalid | High |
+| PROF-008 | Change password with wrong old password | 400 Bad Request | High |
+
+### Admin User Management Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| ADMIN-001 | Create user as admin | 201 Created, user in DB | Critical |
+| ADMIN-002 | Create user as teacher (non-admin) | 403 Forbidden | Critical |
+| ADMIN-003 | Create user with duplicate email | 409 Conflict | High |
+| ADMIN-004 | Assign user to department | 201 Created | High |
+| ADMIN-005 | Assign user to same department twice | 409 Conflict | Medium |
+| ADMIN-006 | Remove user from department | 204 No Content | High |
+| ADMIN-007 | Deactivate user | 204 No Content, user.active=false | High |
+| ADMIN-008 | List users with pagination | 200 OK, paginated response | Medium |
+
+### Public Directory Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| PUB-001 | List public users (unauthenticated) | 200 OK, limited fields | High |
+| PUB-002 | Search users by name | 200 OK, filtered results | High |
+| PUB-003 | Get user by UUID | 200 OK, public profile | High |
+| PUB-004 | Get user by internal ID | 404 Not Found | Medium |
+| PUB-005 | Public response excludes sensitive data | No password, workload, etc. | Critical |
+
+### Edge Cases
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| EDGE-001 | Concurrent profile updates | Optimistic lock exception | Medium |
+| EDGE-002 | Login during password change | Old session invalidated | Medium |
+| EDGE-003 | Unicode characters in name fields | Stored and displayed correctly | Medium |
+| EDGE-004 | Empty search query | Returns all (paginated) | Low |
+| EDGE-005 | User with no departments | Valid profile, empty array | Medium |
+
+## Security Testing
+- [x] **Auth bypass**: Cannot access protected endpoints without token
+- [x] **Role escalation**: Teacher cannot perform admin actions
+- [x] **SQL injection**: All inputs parameterized
+- [x] **XSS prevention**: Output encoding in responses
+- [x] **Password security**: Hashed with BCrypt, not in logs
+- [x] **Token security**: HTTPOnly cookies, short TTL
+- [x] **File upload**: Type validation, no path traversal
+
+## Acceptance Criteria
+- [x] All critical path tests pass
+- [x] No high-priority bugs
+- [x] 80% unit test coverage
+- [x] < 200ms response time for profile operations
+- [x] Security tests pass
+- [x] API matches OpenAPI specification
+
+## References
+- [Solution Design](./solution-design)
+- [ADR-003: Authentication](../../adr/ADR-003-authentication)
+- [OpenAPI Specification](../../../../openapi/npp-portal)

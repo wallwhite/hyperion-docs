@@ -1,0 +1,84 @@
+@startuml
+!include /plantuml/themes/puml-theme-x-light.puml
+
+title Teacher Adds Work Activity
+
+actor "Teacher" as Teacher
+participant "React SPA" as SPA
+participant "ActivityController" as Ctrl
+participant "ActivityService" as Svc
+participant "UserRepository" as UserRepo
+participant "ActivityRepository" as ActRepo
+participant "UserActivityRepository" as UARepo
+database "PostgreSQL" as DB
+
+Teacher -> SPA: Fill activity form\n(description, worksType, year,\nsemester, activityDetailsId)
+activate SPA
+
+opt Add co-authors
+    Teacher -> SPA: Select co-authors from list
+end
+
+SPA -> Ctrl: POST /api/v1/activities?currentUserId={teacherId}\n{CreateActivityRequest}
+activate Ctrl
+
+Ctrl -> Svc: createActivity(request, currentUserId)
+activate Svc
+
+== Validation ==
+
+Svc -> UserRepo: findById(currentUserId)
+activate UserRepo
+UserRepo -> DB: SELECT
+DB --> UserRepo: User
+UserRepo --> Svc: User
+deactivate UserRepo
+
+alt User not found or inactive
+    Svc --> Ctrl: throw ResourceNotFoundException
+    Ctrl --> SPA: 404 Not Found
+    SPA --> Teacher: Show error
+else User valid
+
+    Svc -> Svc: validateActivityDetails(activityDetailsId)
+
+    note right of Svc
+      Validates:
+      - Year: 2020-2100
+      - Semester: 0, 1, or 2
+      - Description: 1-1000 chars
+      - WorksType: SCIENCE | METHOD | ORGANIZATIONAL
+    end note
+
+    == Persistence ==
+
+    Svc -> ActRepo: save(Activity)
+    activate ActRepo
+    ActRepo -> DB: INSERT INTO activities
+    DB --> ActRepo: Activity (with id)
+    ActRepo --> Svc: Activity
+    deactivate ActRepo
+
+    Svc -> UARepo: save(UserActivity)\n[author, contribution=100%]
+    activate UARepo
+    UARepo -> DB: INSERT INTO user_activities
+    DB --> UARepo: OK
+    deactivate UARepo
+
+    loop for each co-author
+        Svc -> UARepo: save(UserActivity)\n[coAuthorId, contribution]
+        UARepo -> DB: INSERT INTO user_activities
+    end
+
+    Svc -> Svc: mapToResponse(activity)
+    Svc --> Ctrl: ActivityResponse
+    deactivate Svc
+
+    Ctrl --> SPA: 201 Created\n{ActivityResponse}
+    deactivate Ctrl
+
+    SPA --> Teacher: Show success,\nrefresh activity list
+    deactivate SPA
+end
+
+@enduml

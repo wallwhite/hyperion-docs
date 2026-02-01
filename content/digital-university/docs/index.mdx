@@ -1,0 +1,67 @@
+---
+title: Digital University Documentation
+description: Architecture and technical documentation for the Digital University project
+icon: GraduationCap
+---
+
+Welcome to the Digital University project documentation. This site contains comprehensive architecture documentation, design decisions, and technical guidelines.
+
+## For New Team Members
+
+1. Be aquainted with [glossary](./digital-university/architecture/glossary)
+
+## Project Overview
+
+The **NPP Portal** (Науково-педагогічні працівники / University Faculty Work Portal) is a comprehensive system for managing university faculty profiles and tracking their professional activities.
+The system consists of multiple modules each of them addresses it's own business needs.
+
+## Module 1. Personal Account Management for Employees
+
+- Business logic: Centralized profiles for university employees (lecturers, assistants, professors) containing:
+  - academic credentials
+  - professional information (with academic degrees, positions, and honors)
+  - department assignments
+  - multi-department assignment support (joint positions, workload tracking)
+- User access: web app only
+
+## Module 2. Work Reporting & Evaluation for Employees who are Faculty/Teaching staff (aka НПП)
+
+- Business logic:
+- Role-based access control with four distinct user levels
+  - Activity reporting by type: Research, Teaching, Administration
+  - Activity scoring system of work with automated rating calculations for performance evaluation (by teacher, faculty, department)
+  - Co-authorship tracking for collaborative work
+  - Public (unauthorized) access to see reported activities
+    - present activities types grouped by type (by teacher or by department)
+    - provide viualisations which show aggregated stats
+
+- User access: web app only
+
+## Module 3. Personal Account Management for Students
+
+- Business logic:
+  - viewing the class schedule;
+  - obtaining information about exams;
+  - receiving messages and announcements;
+  - monitoring financial obligations;
+  - submitting and uploading documents;
+  - electronic signing;
+
+- User access: mobile app and web app
+
+## Module 4. Digital signature\*\* for University actors
+
+[(Implementation details)](./digital-university/drafts/4module-digital-signature)
+
+- Business logic:
+  - upload file (pdf, doc, image) to system by initial counterparty;
+    - sign file by initiator;
+    - select target person or group;
+    - uploaded file cannot be modified or removed. Only cancelled.
+  - nofity target person or group
+  - provide possibility to:
+    - sign file by target person or group
+    - reject file by target person or group
+  - nofity initiator about the result
+
+- User access: mobile app and web app

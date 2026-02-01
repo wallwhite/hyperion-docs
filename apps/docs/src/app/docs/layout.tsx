@@ -1,13 +1,9 @@
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import { baseOptions } from '@/lib/layout.shared';
-import { source } from '@/lib/source';
+import type { ReactNode } from 'react';
 
-const Layout = ({ children }: LayoutProps<'/docs'>) => {
-  return (
-    <DocsLayout tree={source.pageTree} {...baseOptions()}>
-      {children}
-    </DocsLayout>
-  );
+// This layout just passes through children
+// The actual DocsLayout is applied in each project subdirectory
+const Layout = ({ children }: { children: ReactNode }) => {
+  return <>{children}</>;
 };
 
 export default Layout;

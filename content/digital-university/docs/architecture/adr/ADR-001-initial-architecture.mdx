@@ -1,0 +1,106 @@
+---
+title: "ADR-001: Initial Architecture"
+description: Foundational architectural decisions for the NPP Portal
+---
+
+## Status
+
+- **Status**: Accepted
+- **Date**: 2025-09-01
+- **Decision Makers**: Development Team
+
+## Context
+
+The university needs a system for managing faculty profiles and tracking professional activities (scientific, methodological, organizational work). The system must:
+
+- Support ~500-1000 faculty members across multiple institutes/faculties/departments
+- Handle activity reporting with rating calculations
+- Provide public access to faculty information
+- Integrate with existing university infrastructure
+- Be maintainable by a small development team
+- Support both web and potentially mobile access in the future
+
+### Constraints
+
+- Limited budget for infrastructure and licensing
+- Team has experience with Java/Spring ecosystem
+- Must run on university-managed infrastructure (Linux + Docker)
+- Ukrainian language support required
+- Academic year cycle (semesters) drives data patterns
+
+## Decision
+
+We will build a **monolithic backend** with a **separate SPA frontend**:
+
+- **Backend**: Spring Boot 3.x with Java 21
+- **Frontend**: React 18 with TypeScript and Vite
+- **Database**: PostgreSQL 15+
+- **API**: REST with OpenAPI 3.0 specification
+- **Authentication**: JWT tokens with Redis caching
+- **Deployment**: Docker containers
+
+## Rationale
+
+### Considered Options
+
+#### 1. Monolith (Spring Boot + React SPA)
+
+- **Pros**: Simple deployment, easier debugging, team expertise, lower operational overhead
+- **Cons**: Scaling entire app vs components, tighter coupling
+
+#### 2. Microservices (Spring Cloud)
+
+- **Pros**: Independent scaling, technology flexibility, fault isolation
+- **Cons**: Operational complexity, network latency, distributed debugging, overkill for user count
+
+#### 3. Full-Stack Framework (Next.js/Nuxt)
+
+- **Pros**: Unified codebase, SSR benefits, simpler deployment
+- **Cons**: Team lacks Node.js expertise, less control over backend patterns
+
+### Chosen: Option 1 - Monolith
+
+**Reasoning**:
+
+- User count (~1000) doesn't justify microservices complexity
+- Team's Java/Spring expertise reduces learning curve
+- Single deployment unit simplifies operations
+- React SPA enables rich UI with potential PWA/mobile reuse
+- Clear API boundary allows future decomposition if needed
+
+## Consequences
+
+### Positive
+
+- Fast development with familiar technology stack
+- Simple deployment and debugging
+- Lower operational costs
+- Clear separation between frontend and backend
+- OpenAPI spec enables API-first development and documentation
+
+### Negative
+
+- Must scale entire application even if only one area is bottleneck
+- Frontend and backend releases coupled (mitigated by API versioning)
+- Single point of failure
+
+### Neutral
+
+- Team needs to maintain skills in both Java and TypeScript
+- API versioning strategy required for frontend/backend coordination
+
+## Implementation Notes
+
+### Key Architectural Patterns
+
+- **Layered Architecture**: Controller → Service → Repository → Entity
+- **DTO Pattern**: Separate request/response DTOs from entities
+- **Mapper Pattern**: MapStruct for entity ↔ DTO conversion
+- **Soft Delete**: `active` flag instead of hard deletes
+- **Pagination**: Spring Data Page for list endpoints
+
+### Deployment
+
+- Docker images for both services
+- Nginx ingress for routing
+- PostgreSQL as RDBMS

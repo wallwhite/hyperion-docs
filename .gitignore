@@ -6,10 +6,12 @@ build/
 .env.local
 .DS_Store
 *.log
+*.tsbuildinfo
 .turbo
 coverage/
 .vercel
 .source
 .map
+.playwright-mcp/
 .idea
 apps/docs/content/**/(generated)/**

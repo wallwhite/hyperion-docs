@@ -1,0 +1,29 @@
+---
+title: Teacher Add Activity
+description: Flow for teachers to create work type activities with optional co-authors
+---
+
+import { Diagram } from "@/components/diagram";
+
+> This flow is **implemented** in the backend. See [Solution Design 002](/docs/digital-university/architecture/solution-designs/002/solution-design) for full specification.
+
+<Diagram
+  lang="plantuml"
+  path="digital-university/diagrams/seq/web-client/teacher-add-activity.puml"
+  alt="Sequence diagram showing teacher creating a work activity with validation and co-author handling"
+/>
+
+## Work Types
+
+| Backend Enum | Description |
+|--------------|-------------|
+| SCIENCE | Scientific/research work |
+| METHOD | Methodical work |
+| ORGANIZATIONAL | Organizational work |
+
+> **Terminology Note**: Documentation and glossary use RESEARCH/TEACHING/SERVICE but backend uses SCIENCE/METHOD/ORGANIZATIONAL. Alignment needed.
+
+## Related
+
+- [Solution Design 002: Work Reporting](/docs/digital-university/architecture/solution-designs/002/solution-design)
+- [ERD](/docs/digital-university/architecture/erd/main-schema)

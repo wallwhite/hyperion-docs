@@ -1,0 +1,190 @@
+---
+title: "Solution Design - Personal Account Module"
+description: Solution design for faculty personal account management
+---
+
+# Personal Account Module - Solution Design
+
+## Purpose
+
+University faculty members need a centralized system to manage their professional profiles. The Personal Account Module provides:
+
+1. **Profile Management** - Faculty can view and update their personal information
+2. **Credential Tracking** - Academic degrees, positions, and honors are recorded
+3. **Department Assignments** - Support for primary and joint positions across departments
+4. **Public Directory** - Guests can search and view public faculty information
+
+### Business Value
+- Centralizes faculty data previously scattered across spreadsheets
+- Provides public-facing directory for students and external parties
+- Enables accurate reporting for university administration
+- Foundation for activity tracking and rating calculations
+
+## Owners
+- **Product Owner**: University Administration
+- **Development Team**: NPP Portal Team
+
+## Flow Overview
+
+### User Profile Management Flow
+
+```
+┌─────────┐     ┌──────────┐     ┌─────────┐     ┌──────────┐
+│ Teacher │────▶│   SPA    │────▶│   API   │────▶│    DB    │
+└─────────┘     └──────────┘     └─────────┘     └──────────┘
+     │               │                │                │
+     │  1. Login     │                │                │
+     │──────────────▶│                │                │
+     │               │ 2. POST /auth/login             │
+     │               │───────────────▶│                │
+     │               │                │ 3. Validate    │
+     │               │                │───────────────▶│
+     │               │                │◀───────────────│
+     │               │◀───────────────│                │
+     │  4. JWT Token │                │                │
+     │◀──────────────│                │                │
+     │               │                │                │
+     │  5. View Profile               │                │
+     │──────────────▶│                │                │
+     │               │ 6. GET /users/me                │
+     │               │───────────────▶│                │
+     │               │                │ 7. Fetch user  │
+     │               │                │───────────────▶│
+     │               │                │◀───────────────│
+     │               │◀───────────────│                │
+     │  8. Profile data               │                │
+     │◀──────────────│                │                │
+```
+
+## Scope
+
+### In Scope
+- [x] User registration (admin-initiated)
+- [x] Password setup via email token
+- [x] Password reset flow
+- [x] JWT authentication with refresh tokens
+- [x] View own profile
+- [x] Update own profile details
+- [x] View own department assignments
+- [x] Photo upload
+- [x] Public user directory (guest access)
+- [x] Search users by name/department
+- [x] Admin: CRUD users
+- [x] Admin: Assign users to departments
+- [x] Admin: Manage dictionaries (degrees, positions, honors)
+
+### Out of Scope
+- Self-registration (users are created by admin)
+- LDAP/SSO integration (future ADR)
+- Bulk user import (separate feature)
+- Profile change history/audit log
+- Two-factor authentication
+
+## Risk
+
+### Technical Risks
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Password stored insecurely | High | BCrypt hashing with salt |
+| Token theft enables account takeover | High | Short access token TTL (30min), refresh token rotation |
+| Photo upload abuse | Medium | File type validation, size limits, malware scanning |
+| SQL injection in search | High | Parameterized queries via JPA |
+
+### Stability Concerns
+- [ ] Redis unavailability blocks login (refresh tokens)
+- [ ] Large photo uploads may cause timeouts
+- [ ] Concurrent profile updates need optimistic locking
+
+## Research
+
+### Password Reset Token Strategy
+Evaluated options for password reset tokens:
+1. Random string stored in DB - simple but requires DB lookup
+2. Signed JWT with user ID - stateless but harder to revoke
+3. Random string in Redis with TTL - fast, auto-expires
+
+**Result**: Option 3 (Redis) chosen for automatic expiration and consistency with auth token storage.
+
+### Photo Storage
+Evaluated options:
+1. Database BLOB - simple, no external dependency
+2. Local filesystem - performant, but scaling issues
+3. Object storage (S3/MinIO) - scalable, CDN-ready
+
+**Result**: Start with Option 2 (filesystem) with path stored in DB. Architecture allows migration to S3 later.
+
+## API Endpoints
+
+### Authentication
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/auth/login` | Public | Authenticate user |
+| POST | `/auth/refresh` | Public | Refresh access token |
+| POST | `/auth/logout` | Auth | Invalidate refresh token |
+| POST | `/auth/set-password` | Public | Set password with token |
+| POST | `/auth/reset-password` | Public | Request password reset |
+
+### User Profile
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/users/me` | Auth | Get current user profile |
+| PUT | `/users/me` | Auth | Update current user |
+| GET | `/users/me/details` | Auth | Get extended profile |
+| PUT | `/users/me/details` | Auth | Update extended profile |
+| POST | `/users/me/photo` | Auth | Upload photo |
+| DELETE | `/users/me/photo` | Auth | Remove photo |
+| PUT | `/users/me/password` | Auth | Change password |
+
+### User Management (Admin)
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/users` | Admin | List all users |
+| POST | `/users` | Admin | Create user |
+| GET | `/users/{id}` | Admin | Get user by ID |
+| PUT | `/users/{id}` | Admin | Update user |
+| DELETE | `/users/{id}` | Admin | Deactivate user |
+| POST | `/users/{id}/departments` | Admin | Assign to department |
+| DELETE | `/users/{id}/departments/{deptId}` | Admin | Remove from department |
+
+### Public Directory
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/public/users` | Guest | List public profiles |
+| GET | `/public/users/{uuid}` | Guest | Get public profile |
+| GET | `/public/departments/{id}/users` | Guest | Users in department |
+
+## Additional Requirements
+
+### Backend
+- [x] User entity with BCrypt password hashing
+- [x] UserDetails entity for extended profile
+- [x] UserDepartment junction table with workload
+- [x] JWT generation and validation service
+- [x] Redis integration for token storage
+- [x] Multipart file upload handling
+- [x] Email service integration (password reset)
+
+### Frontend
+- [ ] Login page with form validation
+- [ ] Password setup/reset pages
+- [ ] Profile view page
+- [ ] Profile edit form
+- [ ] Photo upload with preview
+- [ ] Public directory with search
+- [ ] Admin user management table
+- [ ] Admin department assignment modal
+
+### Data Validation
+| Field | Validation |
+|-------|------------|
+| Email | Valid format, max 255 chars, unique |
+| Login | Max 255 chars, unique, auto-generated |
+| Password | Min 8 chars, complexity rules |
+| Name fields | Required, max 255 chars each |
+| Photo | Max 5MB, JPEG/PNG only |
+
+## Additional Documentation
+- [ADR-001: Initial Architecture](../../adr/ADR-001-initial-architecture)
+- [ADR-003: Authentication Strategy](../../adr/ADR-003-authentication)
+- [ERD: Main Schema](../../erd/main-schema)
+- [Test Design](./test-design)

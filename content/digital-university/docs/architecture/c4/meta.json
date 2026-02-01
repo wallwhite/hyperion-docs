@@ -1,0 +1,9 @@
+{
+  "title": "C4 Diagrams",
+  "pages": [
+    "c1-system-context-diagram",
+    "c2-container-diagram",
+    "c3-component-diagram",
+    "service-diagrams"
+  ]
+}

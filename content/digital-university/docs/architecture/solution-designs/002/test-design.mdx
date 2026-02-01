@@ -1,0 +1,200 @@
+---
+title: "Test Design - Work Reporting Module"
+description: Testing strategy for faculty work reporting and rating system
+---
+
+# Test Design: Work Reporting Module
+
+## Overview
+This test design covers the Work Reporting Module including activity management, co-authorship, rating calculations, statistics, and read-only mode.
+
+## Test Strategy
+
+### Scope
+What will be tested:
+- [x] Activity CRUD operations
+- [x] Co-author assignment and removal
+- [x] Activity type dictionary management
+- [x] Rating calculation accuracy
+- [x] Statistics aggregation
+- [x] Year/semester filtering
+- [x] Read-only mode enforcement
+- [x] Public activity access
+- [x] Authorization rules
+
+### Out of Scope
+What will not be tested:
+- [ ] Excel export formatting (manual testing)
+- [ ] UI-specific interactions
+- [ ] Browser compatibility
+
+## Test Levels
+
+### Unit Tests
+**Coverage Target**: 80%
+
+**Focus Areas**:
+- [x] Rating calculation service
+- [x] Activity validation logic
+- [x] Filter/search criteria building
+- [x] DTO transformations
+- [x] Read-only mode checks
+
+**Tools**: JUnit 5, Mockito, AssertJ
+
+### Integration Tests
+**Focus Areas**:
+- [x] Activity REST endpoints
+- [x] Database queries and pagination
+- [x] Statistics calculations
+- [x] Read-only mode interceptor
+
+**Test Scenarios**:
+1. Full activity lifecycle (create → update → soft delete)
+2. Co-authorship workflow (add → verify → remove)
+3. Rating calculation with multiple activity types
+4. Read-only mode toggle and enforcement
+
+**Tools**: Spring Boot Test, TestContainers, MockMvc
+
+### End-to-End Tests
+**User Flows**:
+1. **Activity Submission**: Login → Select type → Fill form → Add co-authors → Submit
+2. **View Statistics**: Login → View personal stats → Compare with department
+3. **Admin Read-Only Toggle**: Login as admin → Enable read-only → Verify teacher blocked
+
+**Tools**: Cypress, Playwright
+
+### Performance Tests
+**Metrics**:
+- Activity list (100 items): < 300ms
+- Rating calculation: < 500ms
+- Statistics aggregation: < 1s
+
+**Load Scenarios**:
+- 50 concurrent activity submissions
+- 100 concurrent statistics views
+
+## Test Cases
+
+### Activity CRUD Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| ACT-001 | Create activity as teacher | 201 Created, linked to user | Critical |
+| ACT-002 | Create activity as guest | 401 Unauthorized | Critical |
+| ACT-003 | Update own activity | 200 OK, data persisted | High |
+| ACT-004 | Update another's activity | 403 Forbidden | Critical |
+| ACT-005 | Delete own activity | 204 No Content, active=false | High |
+| ACT-006 | Delete another's activity | 403 Forbidden | Critical |
+| ACT-007 | Create with invalid year (2015) | 400 Bad Request | Medium |
+| ACT-008 | Create with invalid semester (5) | 400 Bad Request | Medium |
+| ACT-009 | Create with non-existent activity type | 400 Bad Request | High |
+
+### Co-Authorship Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| COAUTH-001 | Add co-author on create | Activity linked to both users | High |
+| COAUTH-002 | Add self as co-author | Ignored, creator is auto-owner | Medium |
+| COAUTH-003 | Add non-existent user as co-author | 400 Bad Request | Medium |
+| COAUTH-004 | Co-author can view activity | 200 OK | High |
+| COAUTH-005 | Co-author can edit activity | 200 OK | High |
+| COAUTH-006 | Co-author cannot delete activity | 403 Forbidden (only owner) | High |
+| COAUTH-007 | Activity shows all authors | Response includes all users | Medium |
+
+### Filtering Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| FILT-001 | Filter by year | Only activities from that year | High |
+| FILT-002 | Filter by semester | Only activities from that semester | High |
+| FILT-003 | Filter by works type | Only matching type | High |
+| FILT-004 | Filter by user ID | Only that user's activities | High |
+| FILT-005 | Combine multiple filters | AND logic applied | Medium |
+| FILT-006 | Year range filter (yearFrom/yearTo) | Activities within range | Medium |
+| FILT-007 | Pagination (page=1, size=10) | Correct page returned | Medium |
+
+### Rating Calculation Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| RATE-001 | Single activity rating | coefficient × normTime | Critical |
+| RATE-002 | Multiple activities same type | Sum of individual ratings | Critical |
+| RATE-003 | Mixed activity types | Correct breakdown by type | Critical |
+| RATE-004 | No activities | All ratings = 0 | Medium |
+| RATE-005 | Inactive activities excluded | Not counted in rating | High |
+| RATE-006 | Co-authored activity | Counted for all authors | High |
+| RATE-007 | Specific year/semester filter | Only matching activities | High |
+
+### Statistics Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| STAT-001 | Get own statistics | Returns personal ratings | High |
+| STAT-002 | Get department statistics | Average and total for dept | High |
+| STAT-003 | Department top teachers | Ranked by total rating | Medium |
+| STAT-004 | Statistics for empty department | Returns zeros | Medium |
+| STAT-005 | Statistics as director | Can view full department | High |
+| STAT-006 | Statistics for other department (teacher) | Only public stats | Medium |
+
+### Read-Only Mode Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| ROM-001 | Create activity when read-only | 403 Forbidden with message | Critical |
+| ROM-002 | Update activity when read-only | 403 Forbidden | Critical |
+| ROM-003 | Delete activity when read-only | 403 Forbidden | Critical |
+| ROM-004 | Read activity when read-only | 200 OK | Critical |
+| ROM-005 | Admin operations when read-only | 200 OK (allowed) | High |
+| ROM-006 | Check read-only status (public) | Returns current state | Medium |
+| ROM-007 | Toggle read-only as admin | State changes | High |
+| ROM-008 | Toggle read-only as teacher | 403 Forbidden | High |
+
+### Public Activity Tests
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| PUB-001 | List public activities | Limited fields returned | High |
+| PUB-002 | Public response excludes coefficients | No coefficient/normTime | Critical |
+| PUB-003 | Get user's public activities | Filtered by UUID | High |
+| PUB-004 | Inactive activities excluded from public | Not visible | High |
+
+### Activity Dictionary Tests (Admin)
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| DICT-001 | Create activity type | 201 Created | High |
+| DICT-002 | Update coefficient | 200 OK | High |
+| DICT-003 | Deactivate type with existing activities | Type deactivated, activities unchanged | Medium |
+| DICT-004 | Create type as teacher | 403 Forbidden | High |
+
+### Edge Cases
+
+| ID | Test Case | Expected Result | Priority |
+|----|-----------|-----------------|----------|
+| EDGE-001 | Activity with 10+ co-authors | Handles correctly | Low |
+| EDGE-002 | Unicode in description | Stored correctly | Medium |
+| EDGE-003 | Max length description (1000 chars) | Accepted | Low |
+| EDGE-004 | Semester 0 (full year) | Valid, included in both semesters | Medium |
+| EDGE-005 | Delete user with activities | Activities remain, user shows as inactive | High |
+
+## Security Testing
+- [x] **Auth bypass**: Cannot create/modify activities without token
+- [x] **Authorization**: Cannot modify others' activities (except co-authors)
+- [x] **Data leakage**: Coefficients not exposed in public endpoints
+- [x] **Input validation**: All fields validated server-side
+- [x] **Read-only bypass**: Server-side enforcement, not just UI
+
+## Acceptance Criteria
+- [x] All critical path tests pass
+- [x] Rating calculations match manual verification
+- [x] 80% unit test coverage
+- [x] < 500ms response time for statistics
+- [x] Read-only mode fully enforced
+- [x] Public endpoints hide sensitive data
+
+## References
+- [Solution Design](./solution-design)
+- [ERD: Main Schema](../../erd/main-schema)
+- [Test Design 001: Personal Account](../001/test-design)

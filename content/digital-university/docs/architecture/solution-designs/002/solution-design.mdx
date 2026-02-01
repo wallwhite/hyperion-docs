@@ -1,0 +1,258 @@
+---
+title: "Solution Design - Work Reporting Module"
+description: Solution design for faculty work reporting and rating system
+---
+
+# Work Reporting Module - Solution Design
+
+## Purpose
+
+Faculty members perform various types of professional work throughout the academic year. The Work Reporting Module provides:
+
+1. **Activity Tracking** - Record scientific, methodological, and organizational work
+2. **Co-authorship Support** - Track collaborative work across multiple authors
+3. **Rating Calculation** - Compute performance ratings based on activity coefficients
+4. **Statistics & Reports** - Generate reports at individual and department level
+
+### Business Value
+- Replaces manual Excel-based reporting
+- Enables fair, coefficient-based performance evaluation
+- Provides transparency in rating calculations
+- Supports academic year cycle with semester breakdown
+- Facilitates data export for university reporting
+
+## Owners
+- **Product Owner**: University Administration
+- **Development Team**: NPP Portal Team
+
+## Flow Overview
+
+### Activity Submission Flow
+
+```
+┌─────────┐     ┌──────────┐     ┌─────────┐     ┌──────────┐
+│ Teacher │────▶│   SPA    │────▶│   API   │────▶│    DB    │
+└─────────┘     └──────────┘     └─────────┘     └──────────┘
+     │               │                │                │
+     │  1. Select activity type       │                │
+     │──────────────▶│                │                │
+     │               │ 2. GET /activity-details        │
+     │               │───────────────▶│                │
+     │               │◀───────────────│ (types + coefficients)
+     │               │                │                │
+     │  3. Fill form │                │                │
+     │──────────────▶│                │                │
+     │               │ 4. POST /activities             │
+     │               │───────────────▶│                │
+     │               │                │ 5. Validate    │
+     │               │                │───────────────▶│
+     │               │                │ 6. Create activity
+     │               │                │ 7. Link co-authors
+     │               │                │◀───────────────│
+     │               │◀───────────────│                │
+     │  8. Success   │                │                │
+     │◀──────────────│                │                │
+```
+
+### Rating Calculation Flow
+
+```
+Rating = Σ (Activity.coefficient × Activity.normTime)
+
+Per Activity Type:
+- Research Rating = Σ (RESEARCH activities × coefficients)
+- Teaching Rating = Σ (TEACHING activities × coefficients)
+- Service Rating = Σ (SERVICE activities × coefficients)
+
+Total Rating = Research + Teaching + Service
+```
+
+## Scope
+
+### In Scope
+- [x] Activity CRUD operations
+- [x] Activity type dictionary management (admin)
+- [x] Co-author management
+- [x] Year/semester filtering
+- [x] Individual teacher rating calculation
+- [x] Department statistics aggregation
+- [x] Public activity viewing (limited fields)
+- [x] Read-only mode (blocks edits during review period)
+- [x] Activity search and filtering
+- [x] Basic Excel export
+
+### Out of Scope
+- Activity approval workflow (no Director approval step)
+- File attachments for activities
+- Activity templates/cloning
+- Historical coefficient versioning
+- Advanced analytics dashboards
+- PDF report generation
+
+## Risk
+
+### Technical Risks
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Rating calculation performance | Medium | Materialized views or caching for large datasets |
+| Concurrent activity edits by co-authors | Medium | Optimistic locking, last-writer-wins for conflicts |
+| Data inconsistency on coefficient changes | High | Coefficients immutable after activities reference them |
+| Read-only mode bypass | Medium | Server-side enforcement, clear error messages |
+
+### Stability Concerns
+- [ ] Large activity lists may cause slow page loads (pagination required)
+- [ ] Rating recalculation on every request may be slow (consider caching)
+- [ ] Semester cutoff dates need configuration
+
+## Research
+
+### Coefficient Versioning
+**Question**: Should coefficients be versioned per academic year?
+
+**Options**:
+1. Global coefficients (simplest)
+2. Year-based coefficient snapshots
+3. Full versioning with effective dates
+
+**Result**: Option 1 for MVP. Coefficients rarely change. If needed, archive old activities before updating coefficients.
+
+### Rating Calculation Timing
+**Question**: When to calculate ratings - on demand or pre-computed?
+
+**Options**:
+1. Calculate on every request (accurate but slow)
+2. Scheduled batch recalculation
+3. Event-driven recalculation (on activity change)
+
+**Result**: Option 1 for MVP (simple). Monitor performance and add caching if needed.
+
+## API Endpoints
+
+### Activities
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/activities` | Auth | List activities (filtered) |
+| POST | `/activities` | Teacher | Create activity |
+| GET | `/activities/{id}` | Auth | Get activity details |
+| PUT | `/activities/{id}` | Owner | Update activity |
+| DELETE | `/activities/{id}` | Owner | Soft delete activity |
+
+### Activity Details (Dictionary)
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/activity-details` | Auth | List activity types |
+| POST | `/activity-details` | Admin | Create activity type |
+| PUT | `/activity-details/{id}` | Admin | Update activity type |
+| DELETE | `/activity-details/{id}` | Admin | Deactivate type |
+
+### Statistics
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/statistics/teachers/{id}` | Auth | Teacher rating |
+| GET | `/statistics/teachers/me` | Teacher | Own rating |
+| GET | `/statistics/departments/{id}` | Auth | Department stats |
+| GET | `/statistics/departments/{id}/teachers` | Director | Dept teacher rankings |
+
+### Public Activities
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/public/activities` | Guest | Public activity list |
+| GET | `/public/users/{uuid}/activities` | Guest | User's public activities |
+
+### System
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/system/read-only` | Public | Check read-only status |
+| PUT | `/system/read-only` | Admin | Toggle read-only mode |
+
+## Activity Types
+
+### Research Activities (RESEARCH)
+Examples:
+- Publications in indexed journals (Scopus, WoS)
+- Monographs and textbooks
+- Patents and inventions
+- Research grants
+- Conference presentations
+- PhD supervision
+
+### Teaching and Curriculum Development (TEACHING)
+Examples:
+- Curriculum development
+- Teaching materials creation
+- Lab manual writing
+- E-learning course development
+- Syllabus updates
+
+### Academic Service and Administration (SERVICE)
+Examples:
+- Committee membership
+- Conference organization
+- Student competitions supervision
+- Department administration tasks
+- External expert activities
+
+## Additional Requirements
+
+### Backend
+- [x] Activity entity with year/semester tracking
+- [x] ActivityDetails dictionary with coefficients
+- [x] UserActivity junction table for co-authorship
+- [x] Rating calculation service
+- [x] Read-only mode filter/interceptor
+- [x] Pagination for activity lists
+- [x] Full-text search on activity descriptions
+
+### Frontend
+- [ ] Activity list with filters (year, semester, type)
+- [ ] Activity creation form with type selection
+- [ ] Co-author selection (search by name)
+- [ ] Personal statistics dashboard
+- [ ] Department statistics view (Director)
+- [ ] Activity dictionary management (Admin)
+- [ ] Read-only mode indicator
+- [ ] Export to Excel button
+
+### Data Validation
+| Field | Validation |
+|-------|------------|
+| Description | Required, 3-1000 chars |
+| Year | Required, 2020-2100 |
+| Semester | Required, 0 (year), 1, or 2 |
+| WorksType | Required, enum (RESEARCH, TEACHING, SERVICE) |
+| ActivityDetailsId | Required, must exist |
+| CoAuthorIds | Optional, valid user IDs |
+
+## Read-Only Mode
+
+### Purpose
+During semester-end review periods, administrators lock the system to prevent modifications while evaluating activities.
+
+### Behavior
+When enabled:
+- All POST/PUT/DELETE on `/activities` return `403 Forbidden`
+- GET operations continue normally
+- Admin endpoints remain functional
+- Clear message displayed in UI
+
+### Implementation
+```java
+@Component
+public class ReadOnlyModeInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, ...) {
+        if (readOnlyModeService.isEnabled() && isWriteOperation(request)) {
+            if (!isAdminPath(request) && !isAdminUser()) {
+                throw new ReadOnlyModeException("System is in read-only mode");
+            }
+        }
+        return true;
+    }
+}
+```
+
+## Additional Documentation
+- [ADR-001: Initial Architecture](../../adr/ADR-001-initial-architecture)
+- [ERD: Main Schema](../../erd/main-schema)
+- [Solution Design 001: Personal Account](../001/solution-design)
+- [Test Design](./test-design)

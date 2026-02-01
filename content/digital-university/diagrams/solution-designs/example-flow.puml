@@ -1,0 +1,28 @@
+@startuml
+!include /plantuml/themes/puml-theme-x-light.puml
+
+' TODO: Replace with actual flow diagram
+
+participant "User" as User
+participant "Frontend" as FE
+participant "Backend API" as API
+participant "Database" as DB
+
+User -> FE: Initiate action
+activate FE
+
+FE -> API: API request
+activate API
+
+API -> DB: Query data
+activate DB
+DB --> API: Return data
+deactivate DB
+
+API --> FE: Response
+deactivate API
+
+FE --> User: Display result
+deactivate FE
+
+@enduml

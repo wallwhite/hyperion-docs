@@ -1,0 +1,391 @@
+---
+title: Module4 - Digital Signature
+description: Digital Signature
+icon: GraduationCap
+---
+
+# Module4: Digital Signing of PDFs with QR + monoКЕП
+
+## 1. Goal
+
+Digitize university business processes that currently require paper signatures by enabling users (workers/students) to **sign PDF documents** using **monoКЕП**.  
+The system must provide:
+
+- A secure, audit-ready signing workflow
+- A simple end-user experience (web + mobile)
+- Verifiable signed documents via **QR code** embedded in the PDF
+
+---
+
+## 2. Scope
+
+### In scope
+
+- Generating PDF documents
+- Creating a signing request via monoКЕП
+- Deep link / QR handoff to the mono app for signing
+- Receiving signature status via callback and/or polling
+- Producing a **final PDF** with:
+  - QR code (verification link)
+  - optional “Signed” visual stamp (metadata)
+- Verification portal (public or semi-public) to validate document authenticity and signature validity
+- Audit trail and compliance-grade logging
+
+### Out of scope (initial MVP)
+
+- Multi-provider signing (Diia / Vchasno / others)
+- Advanced workflows (parallel signers, countersignature chains)
+- eIDAS cross-border signature validation
+
+---
+
+## 3. Architecture Overview
+
+### Frontends
+
+- **React / Angular (Web)**: document view, “Sign” action, QR display for mobile signing, status updates
+- **Flutter (Mobile)**: native-friendly flows (open deep link into mono app, return to app)
+
+### Backend
+
+- **Java Spring Boot** providing:
+  - Document generation and immutable storage
+  - monoКЕП integration
+  - signature verification service
+  - audit trail, events, and persistence
+  - verification endpoint for QR scans
+
+### Storage
+
+- **Database (PostgreSQL)** for metadata:
+  - document records
+  - sign requests
+  - signer identity
+  - status and timestamps
+- **Object storage** for files:
+  - original PDF
+  - final PDF (QR + optional visual stamp)
+  - signature artifact(s) (provider payload)
+
+---
+
+## 4. Trust & Security Model
+
+### Assets to protect
+
+- Integrity of the document that was signed
+- Integrity and authenticity of the signature result
+- Non-repudiation audit trail (who signed what, when, via which request)
+- Access control to documents and signing actions
+
+### Threats and mitigations
+
+- **Document tampering**: store immutable document binary; always compute hash from the stored binary.
+- **Callback forgery**: verify callback authenticity (provider signature, secret, or mutual TLS if available). If provider does not support signed callbacks, enforce strict requestId correlation + allowlist IP + short TTL + compare returned signature to stored hash.
+- **Unauthorized signing**: enforce authorization on sign initiation; require that signed result references the expected requestId and document hash.
+- **Replay attacks**: one-time sign request tokens, short TTL, request state machine.
+- **QR misuse**: QR should point to a verification URL containing an opaque token, not sensitive data.
+
+---
+
+## 5. Core Concepts & Data Model
+
+### 5.1 Entities
+
+#### `Document`
+
+- `id` (UUID)
+- `title`
+- `ownerUserId` (or createdBy)
+- `mimeType` (PDF)
+- `originalFileRef` (object storage key)
+- `originalSha256` (for internal integrity)
+- `createdAt`
+
+> Note: monoКЕП may require a specific hash algorithm; store that computed hash separately.
+
+#### `SignRequest`
+
+- `id` (UUID)
+- `documentId`
+- `provider` = `MONO_KEP`
+- `providerRequestId` (mono requestId)
+- `status` (`CREATED`, `PENDING_USER_ACTION`, `SIGNED`, `DECLINED`, `EXPIRED`, `FAILED`)
+- `deeplink` (returned by provider)
+- `expiresAt`
+- `callbackReceivedAt`
+- `createdAt`, `updatedAt`
+
+#### `SignatureArtifact`
+
+- `id`
+- `signRequestId`
+- `providerPayload` (JSON, encrypted at rest if required)
+- `signatureBase64` (if provided)
+- `certificateChain` (if provided)
+- `signerDisplayName` (if provided)
+- `signerTaxId / identifier` (if permitted/needed)
+- `signatureVerified` (boolean)
+- `verificationDetails` (JSON)
+- `createdAt`
+
+#### `FinalPdf`
+
+- `documentId`
+- `signedPdfRef` (object storage key)
+- `qrVerificationUrl`
+- `visualStamp` (boolean)
+- `generatedAt`
+
+---
+
+## 6. Workflow Design
+
+## 6.1 Document Creation
+
+1. Backend generates PDF from template/data.
+2. Store PDF in object storage as **immutable**.
+3. Compute:
+   - `originalSha256` (internal integrity)
+   - `monoRequiredHash` (per monoКЕП requirements)
+
+## 6.2 Create monoКЕП Signing Request
+
+1. User clicks “Sign” in UI.
+2. Backend verifies user authorization and document state.
+3. Backend calls monoКЕП “create signing request” with:
+   - document name
+   - document hash (per mono spec)
+   - a link to fetch/download the PDF (or provider-supported mechanism)
+   - `callbackUrl` → `/api/signing/mono/callback`
+4. Backend persists `SignRequest` and returns to frontend:
+   - `deeplink`
+   - `signRequestId`
+   - `expiresAt`
+
+## 6.3 User Signing UX
+
+### Web (React/Angular)
+
+- Show modal:
+  - “Scan QR with monobank app to sign”
+  - QR encoding: `deeplink`
+  - status indicator (“Waiting for signature…”)
+- Offer fallback: “Open on phone” (if browser supports deep links)
+
+### Mobile (Flutter)
+
+- Button: “Sign in monobank”
+- App opens `deeplink`
+- After signing, user returns to your app and sees status (polling or push)
+
+## 6.4 Status Resolution (Callback + Polling)
+
+- Preferred: provider calls `callbackUrl` when status changes.
+- Fallback: backend polls provider status periodically:
+  - short polling for active requests (e.g., every 3–5 seconds up to 1 minute)
+  - then exponential backoff, stop at expiry
+
+State machine:
+
+- `CREATED` → `PENDING_USER_ACTION`
+- `PENDING_USER_ACTION` → `SIGNED` | `DECLINED` | `EXPIRED` | `FAILED`
+
+## 6.5 Final PDF Generation (QR + Optional Stamp)
+
+After status becomes `SIGNED`:
+
+1. Backend generates **verification URL**:
+   - `https://your-domain/verify/<opaqueToken>`
+2. Generate QR image encoding that URL.
+3. Embed QR into PDF (e.g., bottom-right corner on last page):
+   - Optionally add a visible stamp text: “Signed via monoКЕП, requestId=…, signedAt=…”
+4. Store final PDF as `signedPdfRef`.
+5. Mark `FinalPdf` record.
+
+> Important: the QR/stamp is a **visual convenience**. Legal validity comes from the cryptographic signature verification and audit trail.
+
+---
+
+## 7. Verification Portal (QR Scan Target)
+
+### URL format
+
+- `https://your-domain/verify/{token}`  
+  Token should be opaque and map to a document + final PDF version. Avoid exposing raw IDs or personal data.
+
+### Verification page should show
+
+- Document metadata (title, createdAt)
+- Signature status: VALID / INVALID / UNKNOWN
+- Who signed (if allowed), timestamp, certificate details
+- Hash comparison:
+  - the PDF being verified matches the stored immutable version
+- Download link to final signed PDF (optional, access-controlled)
+
+### Verification logic
+
+- Fetch `token` → resolve document + signature artifact.
+- Validate:
+  1. Signature cryptographically valid
+  2. Certificate chain valid at signing time
+  3. Document hash matches the signed hash (mono hash)
+  4. RequestId correlation and audit integrity
+
+---
+
+## 8. API Design (Spring Boot)
+
+### 8.1 Document APIs
+
+- `POST /api/documents`
+  - creates document PDF, stores it, returns `documentId`
+- `GET /api/documents/{id}`
+  - metadata + links
+- `GET /api/documents/{id}/file`
+  - serves immutable original PDF (auth required)
+
+### 8.2 Signing APIs
+
+- `POST /api/documents/{id}/sign/mono`
+  - returns:
+    - `signRequestId`
+    - `deeplink`
+    - `expiresAt`
+- `GET /api/sign-requests/{id}`
+  - returns status, timestamps, and result summary
+- `POST /api/signing/mono/callback`
+  - provider callback endpoint
+  - validates authenticity, updates status, stores artifact
+
+### 8.3 Final PDF
+
+- `GET /api/documents/{id}/signed`
+  - returns final PDF (auth required)
+
+### 8.4 Verification
+
+- `GET /verify/{token}`
+  - returns HTML page (public/semi-public)
+- `GET /api/verify/{token}`
+  - returns JSON result (optional)
+
+---
+
+## 9. Hashing & Signature Details
+
+### Hashing
+
+- Maintain:
+  - `originalSha256` for internal integrity checks
+  - `monoRequiredHash` (as required by monoКЕП)
+- Always compute hashes from the **immutable stored binary** (not from regenerated PDFs).
+
+### Signature artifact storage
+
+- Store the full provider payload to support audits and future re-verification.
+- If personal data is included, apply:
+  - encryption at rest (KMS or application-level)
+  - strict retention policy
+  - access controls
+
+---
+
+## 10. UX Notes
+
+### Fast path
+
+- User clicks “Sign”
+- Sees QR/deeplink
+- Signs in monobank app
+- UI auto-updates to “Signed”
+- User downloads “Signed PDF”
+
+### Failure paths
+
+- Expired request → show “Request expired, try again”
+- Declined → show “Signing cancelled”
+- Callback not received → polling fallback
+- Provider API error → retry with idempotency keys
+
+---
+
+## 11. Operational Considerations
+
+### Logging & Auditing
+
+- Log every transition in sign request state:
+  - who initiated
+  - timestamps
+  - provider requestId
+  - final result
+- Keep a dedicated `audit_event` table (append-only).
+
+### Rate limits & resilience
+
+- Provider API calls must be rate-limited.
+- Use resilient HTTP client (timeouts, retries with jitter, circuit breaker).
+- Idempotency on sign-request creation to avoid duplicates on user double-click.
+
+### Background jobs
+
+- Poll unresolved requests
+- Expire stale requests
+- Re-verify signatures periodically (optional)
+
+---
+
+## 12. Implementation Notes (Libraries)
+
+### PDF manipulation
+
+- Apache PDFBox (open source) for embedding QR and stamps
+- (If you need advanced PAdES features, consider commercial libraries; keep MVP simple)
+
+### QR generation
+
+- ZXing (Java) to produce PNG/SVG for embedding
+
+### HTTP integration
+
+- Spring WebClient with retries and circuit breaker (Resilience4j)
+
+---
+
+## 13. MVP Deliverables
+
+1. Backend endpoints:
+   - create document PDF
+   - start mono signing request
+   - callback handling + status
+   - generate final PDF with QR
+   - verification endpoint
+2. Web UI:
+   - sign button
+   - QR display
+   - live status updates
+3. Mobile UI (Flutter):
+   - open deeplink
+   - show sign status
+4. Audit log + minimal admin view (optional)
+
+---
+
+## 14. Future Enhancements
+
+- Add Diia.Signature as another provider behind the same `SignatureProvider` interface
+- Multi-signer workflows (sequential/parallel)
+- Timestamp authority integration (TSP) if required for long-term validation
+- Long-term validation profiles (LTV) for PDF signatures
+- SSO integration (university IAM) + role-based signing permissions
+
+---
+
+## 15. Open Questions (to decide early)
+
+1. What exact signature format does monoКЕП return in your chosen flow (embedded PDF vs detached artifact)?
+2. Should verification be public, or only accessible to authenticated users?
+3. Do you need to display signer identity on the verification page (privacy/legal constraints)?
+4. Retention period for signature artifacts and logs (university policy)?
+
+---

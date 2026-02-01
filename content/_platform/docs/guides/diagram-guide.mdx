@@ -1,0 +1,383 @@
+---
+title: Diagram Guide
+description: Using diagrams in Hyperion Docs - PlantUML, Mermaid, Graphviz, C4, theming, and best practices
+icon: Image
+---
+
+# Diagram Guide
+
+This guide covers everything about using diagrams in Hyperion Docs: PlantUML, Mermaid, Graphviz, C4, theming, and best practices.
+
+## Supported Diagram Types
+
+| Type | Language Code | Extension | Use Case |
+|------|--------------|-----------|----------|
+| PlantUML | `plantuml` or `puml` | `.puml` | ERD, sequence diagrams, class diagrams, component diagrams |
+| Graphviz | `graphviz` or `dot` | `.dot` | Flow diagrams, directed graphs |
+| Mermaid | `mermaid` | N/A (inline) | All diagram types, inline rendering |
+| C4 PlantUML | `c4plantuml` | `.puml` | Architecture diagrams using C4 model (PlantUML syntax) |
+| C4 Mermaid | `mermaid` | N/A (inline) | Architecture diagrams using C4 model (Mermaid syntax) |
+
+## When to Use Each Type
+
+- **PlantUML**: Complex diagrams, reusable components, include directives
+- **Graphviz**: Traditional flow charts, network diagrams
+- **Mermaid**: Simple diagrams, inline content, quick diagrams
+- **C4 PlantUML**: System architecture with PlantUML syntax, supports includes and theming
+- **C4 Mermaid**: System architecture with simpler Mermaid syntax, inline rendering
+
+## Basic Usage
+
+### External Diagram Files
+
+```mdx
+<Diagram
+  lang="plantuml"
+  path="project-name/diagrams/architecture/system-overview.puml"
+  alt="System architecture showing main components"
+/>
+```
+
+**Path Rules**:
+- All paths are relative to the `/content` directory
+- Use the project prefix: `project-name/diagrams/...`
+- Use subdirectories to organize: `architecture/`, `sequence/`, etc.
+
+### Inline Diagrams (Mermaid Only)
+
+```mdx
+<Diagram
+  lang="mermaid"
+  chart="
+graph TD;
+  A[Client] --> B[Server];
+  B --> C[Database];
+  "
+/>
+```
+
+## C4 Architecture Diagrams
+
+The C4 model provides four levels of architecture visualization:
+
+1. **System Context**: High-level view of the system and its users
+2. **Container**: Major technical building blocks (applications, databases, etc.)
+3. **Component**: Internal structure of containers
+4. **Code**: Class-level details (optional)
+
+### C4 with PlantUML
+
+```text
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "User", "End user of the system")
+System_Boundary(c1, "System") {
+    Container(app, "Application", "Next.js", "Serves content")
+    Container(api, "API", "Node.js", "Handles requests")
+}
+Rel(user, app, "Uses")
+Rel(app, api, "Calls")
+@enduml
+```
+
+### C4 with Mermaid (Recommended for Simpler Diagrams)
+
+```text
+C4Context
+    title System Context diagram for Docs System
+
+    Person(user, "User", "Documentation reader")
+    System(docs, "Docs System", "Documentation platform")
+    System_Ext(kroki, "Kroki", "Diagram renderer")
+
+    Rel(user, docs, "Reads")
+    Rel(docs, kroki, "Renders diagrams")
+```
+
+**Learn more**: [Mermaid C4 Syntax](https://mermaid.ai/open-source/syntax/c4.html)
+
+## PlantUML Theming and Styling
+
+### Including Themes
+
+PlantUML themes provide consistent styling across diagrams:
+
+```text
+@startuml
+!include /plantuml/themes/puml-theme-x-light.puml
+
+' Your diagram content here
+@enduml
+```
+
+Store theme files in your project's `diagrams/themes/` directory.
+
+### Theme Components
+
+#### 1. Legend Definitions
+
+Define color meanings:
+
+```text
+legend
+!define EXTERNAL_SERVICE #8EC8F6
+!define DEPRECATED #CF2907
+!define SHARED_INFRA #ff8c69
+
+|= Color |= Description |
+|<back:EXTERNAL_SERVICE> Cyan | 3rd-Party Service |
+|<back:DEPRECATED><color:white> Red | Deprecated Service |
+|<back:SHARED_INFRA> Salmon | Shared Infrastructure |
+endlegend
+```
+
+#### 2. Skin Parameters
+
+Customize diagram appearance:
+
+```text
+'' Color definitions
+!$BLACK = "#000000"
+!$MAGENTA = "#FF00FF"
+!$LIGHT_GREEN = "#c3f7c8"
+!$PURPLE = "#9391ff"
+
+'' Apply to elements
+skinparam actor {
+    BackgroundColor $MAGENTA
+}
+
+skinparam participant {
+    BackgroundColor $LIGHT_GREEN
+    BorderColor $BLACK
+}
+
+skinparam arrow {
+    Color $BLACK
+}
+
+skinparam sequence {
+    LifeLineBorderColor $PURPLE
+    LifeLineBackgroundColor $PURPLE
+    BorderColor $BLACK
+}
+```
+
+#### 3. Service Color Variables
+
+Define consistent colors for service types:
+
+```text
+'' Service type colors
+!$SAGA = $LIGHT_PURPLE
+!$DEPRECATED = $RED
+!$AGREEMENT = $GOLD
+```
+
+Apply to actors:
+
+```text
+@startuml
+!include /plantuml/themes/puml-theme-x-light.puml
+
+actor Admin $GOLD
+participant "Payment Service" as Payment $SAGA
+participant "Legacy System" as Legacy $DEPRECATED
+
+Admin -> Payment: Process
+Payment -> Legacy: Update
+@enduml
+```
+
+#### 4. CSS-Style Customization
+
+Use `<style>` blocks for advanced styling:
+
+```text
+<style>
+node {
+    Padding 12
+    Margin 12
+    HorizontalAlignment center
+    MaximumWidth 120
+}
+</style>
+```
+
+### Theme Best Practices
+
+- **Consistent colors**: Use theme variables consistently across all diagrams
+- **Meaningful legends**: Include legends when using custom colors
+- **Light/Dark themes**: Create both light and dark theme variants
+- **Reusable themes**: Store themes in `/diagrams/themes/` for reuse
+- **Document colors**: Explain color meanings in your theme files
+
+## PlantUML Include Directives
+
+PlantUML supports `!include` for reusable diagram components.
+
+### Usage
+
+```text
+@startuml
+!include path/to/base-diagram.puml
+
+' Add additional content here
+@enduml
+```
+
+### Best Practices
+
+1. **Create reusable components**: Extract common entities, actors, or components
+2. **Avoid circular includes**: System detects them, but design to avoid
+3. **Keep includes simple**: Include focused, modular components
+4. **Use relative paths**: Include files relative to current diagram location
+
+### Security
+
+- All included files must be within your project's `diagrams/` directory
+- Path traversal protection enforced
+- Circular include detection prevents infinite loops
+
+## Sequence Diagram Standards
+
+Follow these best practices for sequence diagrams (PlantUML or Mermaid):
+
+### 1. Clear Actor Names
+
+Use descriptive, unambiguous names:
+
+```text
+participant "User" as User
+participant "Customer Portal" as Portal
+participant "Customer BFF" as BFF
+participant "Customer API" as API
+```
+
+### 2. Message Flow
+
+Show both request and response flows:
+
+```text
+User -> Portal: Request
+Portal -> BFF: Forward request
+BFF --> Portal: Response
+Portal --> User: Result
+```
+
+### 3. Activation Boxes
+
+Show when an object is active/processing:
+
+```text
+User -> Portal: Request
+activate Portal
+Portal -> BFF: Forward
+activate BFF
+BFF --> Portal: Response
+deactivate BFF
+Portal --> User: Result
+deactivate Portal
+```
+
+### 4. Loops and Conditions
+
+Use appropriate syntax:
+
+```text
+alt success case
+    Service --> Client: 200 OK
+else failure case
+    Service --> Client: 404 Not Found
+end
+```
+
+### 5. Error Handling
+
+Include error scenarios:
+
+```text
+Service -> Database: Query
+alt query succeeds
+    Database --> Service: Results
+else query fails
+    Database --> Service: Error
+    Service --> Client: 500 Internal Error
+end
+```
+
+### 6. Time Ordering
+
+Arrange messages chronologically from top to bottom.
+
+## Diagram Features
+
+### Dark/Light Theme Support
+
+All diagrams automatically adapt to the user's theme preference. No special configuration required.
+
+### Zoomable Viewer
+
+All diagrams are clickable and open in a full-screen zoomable modal with pan/zoom controls powered by React Flow.
+
+### Accessibility
+
+Always provide descriptive `alt` text:
+
+```mdx
+<Diagram
+  lang="plantuml"
+  path="project-name/diagrams/architecture.puml"
+  alt="System architecture showing docs app, API, and Kroki service"
+/>
+```
+
+## Security Considerations
+
+### Size Limits
+- Maximum file size: **256 KB** (after include resolution)
+- Enforced before rendering
+
+### Path Validation
+- All diagram paths must resolve within the `/content` directory
+- Path traversal attempts are blocked
+- Applies to both main files and `!include` directives
+
+### Language Allowlist
+- Only supported diagram languages are accepted
+- Configured in API route's `LANG_MAP`
+- Extensible by adding entries to the language map
+
+## Quick Reference
+
+### Language Codes
+
+- `plantuml` or `puml` → PlantUML
+- `graphviz` or `dot` → Graphviz
+- `mermaid` → Mermaid
+- `c4plantuml` → C4 Model PlantUML
+
+### Component Syntax
+
+```mdx
+{/* PlantUML external file */}
+<Diagram lang="plantuml" path="project-name/diagrams/architecture.puml" alt="Architecture diagram" />
+
+{/* Graphviz external file */}
+<Diagram lang="graphviz" path="project-name/diagrams/flow.dot" alt="Flow diagram" />
+
+{/* Mermaid inline */}
+<Diagram lang="mermaid" chart="graph TD; A-->B;" />
+
+{/* C4 Model */}
+<Diagram lang="c4plantuml" path="project-name/diagrams/c4-architecture.puml" alt="C4 diagram" />
+```
+
+## Resources
+
+- **PlantUML Guide**: https://plantuml.com
+- **Mermaid Documentation**: https://mermaid.js.org
+- **Mermaid C4 Syntax**: https://mermaid.ai/open-source/syntax/c4.html
+- **C4 Model**: https://c4model.com
+- **Kroki Documentation**: https://kroki.io

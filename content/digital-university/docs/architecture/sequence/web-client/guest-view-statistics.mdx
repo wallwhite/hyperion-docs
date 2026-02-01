@@ -1,0 +1,27 @@
+---
+title: Guest View Statistics
+description: Flow for unauthorized users to view teacher statistics via public endpoints
+---
+
+import { Diagram } from "@/components/diagram";
+
+> **Not Yet Implemented** - OpenAPI spec declares Statistics endpoints but no backend implementation exists. Rating calculation logic from [Solution Design 002](/docs/digital-university/architecture/solution-designs/002/solution-design) is not built.
+
+<Diagram
+  lang="plantuml"
+  path="digital-university/diagrams/seq/web-client/guest-view-statistics.puml"
+  alt="Sequence diagram showing guest browsing teacher directory and viewing statistics"
+/>
+
+## What Exists vs Planned
+
+| Feature | Status |
+|---------|--------|
+| GET /api/v1/public/users (directory) | Implemented |
+| GET /api/v1/public/users/\{id\}/statistics | **Not implemented** |
+| StatisticsService | **Not implemented** |
+| Rating calculation | **Not implemented** |
+
+## Related
+
+- [Solution Design 002: Work Reporting](/docs/digital-university/architecture/solution-designs/002/solution-design)

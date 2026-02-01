@@ -1,0 +1,374 @@
+---
+title: Writing Guide
+description: Writing style, formatting standards, and content guidelines for documentation
+icon: Pen
+---
+
+# Writing Guide
+
+This guide covers writing style, formatting standards, and content guidelines for Hyperion Docs documentation.
+
+## Technical Documentation Tone
+
+- Use clear, concise language
+- Write in present tense
+- Use active voice when possible
+- Be specific and precise
+- Avoid jargon unless necessary (define terms when used)
+
+### Examples
+
+**Good**:
+> The API validates input before processing the request.
+
+**Avoid**:
+> The API will be validating input, and then it might process the request.
+
+## Code Examples
+
+Use fenced code blocks with language specification:
+
+````mdx
+```bash
+pnpm dev
+```
+
+```typescript
+const example: string = "value";
+```
+````
+
+### Code Block Guidelines
+
+- Always specify the language for syntax highlighting
+- Include comments to explain complex logic
+- Keep examples focused and minimal
+- Provide complete, working examples when possible
+
+## Command Formatting
+
+Format commands as inline code or in code blocks:
+
+```mdx
+Run `pnpm dev` to start the development server.
+```
+
+For multiple commands:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development
+pnpm dev
+```
+
+## Link Formatting
+
+Use descriptive link text:
+
+```mdx
+{/* Good */}
+See the [diagram usage guide](./diagram-guide) for details.
+
+{/* Avoid */}
+Click [here](./diagram-guide) for details.
+```
+
+### Internal Links
+
+- Use relative paths for links within the docs
+- Link to related documentation when helpful
+- Keep link text concise but descriptive
+
+## Headings
+
+### Hierarchy
+
+Use hierarchical heading structure:
+
+```mdx
+# Page Title (H1)
+## Main Section (H2)
+### Subsection (H3)
+#### Detail (H4)
+```
+
+### Guidelines
+
+- Use title case for H1
+- Use sentence case for H2 and below
+- Keep headings concise and descriptive
+- Don't skip heading levels (H1 → H3)
+
+### Examples
+
+**Good**:
+```mdx
+# Architecture Decision Records
+## When to Create an ADR
+### Examples of ADR-worthy decisions
+```
+
+**Avoid**:
+```mdx
+# ARCHITECTURE DECISION RECORDS!!!
+## When You Should Create An ADR
+#### Examples
+```
+
+## Lists
+
+### Unordered Lists
+
+Use for items without specific order:
+
+```mdx
+- First item
+- Second item
+- Third item
+```
+
+### Ordered Lists
+
+Use for sequential steps:
+
+```mdx
+1. First step
+2. Second step
+3. Third step
+```
+
+### Checkboxes
+
+Use for requirements or task lists:
+
+```mdx
+- [ ] Incomplete task
+- [x] Completed task
+```
+
+## Tables
+
+Use tables for structured data:
+
+```mdx
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Data 1   | Data 2   | Data 3   |
+| Data 4   | Data 5   | Data 6   |
+```
+
+### Table Guidelines
+
+- Keep tables simple and scannable
+- Use header row to label columns
+- Align text appropriately
+- Consider using lists if table becomes too complex
+
+## Callouts and Alerts
+
+Use blockquotes for important information:
+
+```mdx
+> **Note**: This is an important note.
+
+> **Warning**: This action cannot be undone.
+```
+
+## File and Path References
+
+When referencing files or directories:
+
+```mdx
+- File: `content/project-name/docs/index.mdx`
+- Directory: `content/project-name/diagrams/`
+- Relative: `diagrams/architecture.puml`
+```
+
+## Inline Code
+
+Use backticks for inline code elements:
+
+```mdx
+The `<Diagram>` component renders diagrams.
+Set the `lang` parameter to `"plantuml"`.
+```
+
+## Emphasis
+
+### Bold
+
+Use for important terms or UI elements:
+
+```mdx
+**Important**: Always validate input.
+Click the **Submit** button.
+```
+
+### Italic
+
+Use for emphasis or introducing new terms:
+
+```mdx
+The *primary key* uniquely identifies each record.
+```
+
+## Paragraphs
+
+- Keep paragraphs focused on one idea
+- Use blank lines between paragraphs
+- Aim for 2-4 sentences per paragraph
+- Break up long blocks of text with headings or lists
+
+## Examples and Templates
+
+### Provide Context
+
+When showing examples, explain what they do:
+
+```mdx
+Example: Creating a simple sequence diagram
+
+\`\`\`plantuml
+@startuml
+User -> System: Request
+System --> User: Response
+@enduml
+\`\`\`
+
+This diagram shows a basic request-response interaction between a user and system.
+```
+
+### Use Placeholders
+
+Use clear placeholders for variable content:
+
+```mdx
+`/docs/architecture/{project}/adr/`
+`ADR-{number}: Decision Title`
+```
+
+Common placeholder patterns:
+- `{project}` - Project name
+- `{number}` - Sequential number
+- `{topic}` - Topic or category name
+- `{lang}` - Programming language
+
+## Accessibility
+
+### Alt Text for Diagrams
+
+Always provide descriptive alt text:
+
+```mdx
+<Diagram
+  lang="plantuml"
+  path="project-name/diagrams/architecture.puml"
+  alt="System architecture showing docs app, API route, and Kroki service with data flow arrows"
+/>
+```
+
+### Descriptive Links
+
+Make link text meaningful:
+
+```mdx
+{/* Good */}
+See the [solution design template](../templates/solution-design).
+
+{/* Avoid */}
+See [this](../templates/solution-design).
+```
+
+## Common Mistakes to Avoid
+
+### 1. Unclear Antecedents
+
+**Avoid**:
+> The system processes the request and sends it to the database. It returns the results.
+
+**Good**:
+> The system processes the request and sends it to the database. The database returns the results.
+
+### 2. Passive Voice Overuse
+
+**Avoid**:
+> The configuration file should be updated by the administrator.
+
+**Good**:
+> The administrator should update the configuration file.
+
+### 3. Unnecessary Words
+
+**Avoid**:
+> In order to start the server, you need to run the command.
+
+**Good**:
+> To start the server, run the command.
+
+### 4. Ambiguous Instructions
+
+**Avoid**:
+> Update the file.
+
+**Good**:
+> Update the `config.yaml` file with your API credentials.
+
+## Terminology
+
+### Consistency
+
+Use consistent terms throughout:
+
+- Choose one term and stick with it
+- Don't alternate between synonyms
+- Create a glossary for project-specific terms
+
+### Common Terms
+
+| Use | Avoid |
+|-----|-------|
+| authentication | auth (in formal docs) |
+| configuration | config (in formal docs) |
+| repository | repo (in formal docs) |
+| documentation | docs (except in titles/names) |
+
+## Versioning and Dates
+
+### Date Format
+
+Use ISO 8601 format:
+
+```mdx
+**Date**: 2024-01-28
+**Last Updated**: 2024-01-28
+```
+
+### Version Numbers
+
+Use semantic versioning:
+
+```mdx
+Version 1.0.0
+Version 2.1.3
+```
+
+## Review Checklist
+
+Before publishing documentation, verify:
+
+- [ ] All code examples are tested and work
+- [ ] Links point to correct destinations
+- [ ] Diagrams have descriptive alt text
+- [ ] Headings follow hierarchy (no skipped levels)
+- [ ] Spelling and grammar are correct
+- [ ] Technical accuracy is verified
+- [ ] Placeholders are clearly marked
+- [ ] Examples include explanations
+
+## Resources
+
+- **Markdown Guide**: https://www.markdownguide.org
+- **MDX Documentation**: https://mdxjs.com
+- **Fumadocs Documentation**: https://fumadocs.vercel.app

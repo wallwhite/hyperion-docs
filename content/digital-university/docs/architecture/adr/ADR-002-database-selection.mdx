@@ -1,0 +1,161 @@
+---
+title: "ADR-002: Database Selection"
+description: Selection of PostgreSQL as the primary database for NPP Portal
+---
+
+# ADR-002: Database Selection
+
+## Status
+
+- **Status**: Accepted
+- **Date**: 2025-09-16
+- **Decision Makers**: Development Team
+
+## Context
+
+The NPP Portal requires a database to store:
+
+- **User data**: ~1000 faculty profiles with credentials, details, department assignments
+- **Organizational structure**: Institutes → Faculties → Departments hierarchy
+- **Activity records**: Thousands of work reports per academic year
+- **Dictionary data**: Degrees, positions, honors, activity types with coefficients
+- **Audit data**: Creation/modification timestamps for all records
+
+### Requirements
+
+| Requirement                                     | Priority                        |
+| ----------------------------------------------- | ------------------------------- |
+| ACID transactions                               | High                            |
+| Complex joins (user ↔ departments ↔ activities) | Medium                          |
+| JSON support for flexible activity details      | High                            |
+| Full-text search for activity descriptions      | Low                             |
+| Horizontal scaling                              | Low (data volume is manageable) |
+| Team expertise                                  | High                            |
+| Open source / no licensing costs                | High                            |
+
+### Data Characteristics
+
+- **Read-heavy** workload (reports, statistics, public views)
+- **Seasonal write patterns** (activity submission deadlines)
+- **Relational data model** with clear entity relationships
+- **Moderate data volume** (~10GB projected over next 5 years)
+
+## Decision
+
+We will use **PostgreSQL 15+** as the primary database.
+
+## Rationale
+
+### Considered Options
+
+#### 1. PostgreSQL
+
+- **Pros**:
+  - ACID compliance with strong transactional guarantees
+  - Excellent Spring Data JPA integration
+  - Native JSON/JSONB support for flexible `additionalDetails`
+  - Full-text search built-in
+  - No licensing costs
+  - Team familiarity
+  - Strong community and ecosystem
+- **Cons**:
+  - Vertical scaling primarily (horizontal requires extensions)
+  - Requires DBA knowledge for optimization
+
+#### 2. MySQL/MariaDB
+
+- **Pros**:
+  - Wide adoption, good performance
+  - Simple replication setup
+- **Cons**:
+  - Weaker JSON support than PostgreSQL
+  - Less feature-rich for complex queries
+  - GPL licensing considerations
+
+#### 3. MongoDB
+
+- **Pros**:
+  - Flexible schema for activity details
+  - Native horizontal scaling
+  - Good for document-centric data
+- **Cons**:
+  - **Eventual consistency by default** - problematic for ratings calculations
+  - Complex joins require application-level logic
+  - Overkill for relational data model
+
+#### 4. Microsoft SQL Server
+
+- **Pros**:
+  - Enterprise features, good tooling
+  - Strong .NET integration (not relevant here)
+- **Cons**:
+  - Licensing costs
+  - Less common in Java/Spring ecosystem
+
+### Chosen: PostgreSQL
+
+**Key factors**:
+
+1. **Relational model fits domain**: Users, departments, activities have clear relationships
+2. **JSONB for flexibility**: `ActivityDetails.additionalDetails` can store varying fields per activity type
+3. **Spring Data JPA**: First-class support with HikariCP connection pooling
+4. **No licensing costs**: Critical for university budget
+5. **Team expertise**: Reduces learning curve and operational risk
+
+## Consequences
+
+### Positive
+
+- Reliable ACID transactions for rating calculations
+- Seamless Spring Data JPA integration
+- JSONB enables semi-structured data without schema migrations
+- Rich ecosystem of tools (pgAdmin, pg_dump, etc.)
+- Easy local development with Docker
+
+### Negative
+
+- Requires proper indexing strategy for performance
+- Connection pool tuning needed for concurrent users
+
+### Neutral
+
+- Standard SQL skills are transferable
+- Liquibase/Flyway for schema migrations
+
+## Implementation Notes
+
+### Key Indexes
+
+```sql
+-- User lookups
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_login ON users(login);
+
+-- Activity queries
+CREATE INDEX idx_activities_year_semester ON activities(year, semester);
+CREATE INDEX idx_activities_works_type ON activities(works_type);
+CREATE INDEX idx_user_activities_user_id ON user_activities(user_id);
+
+-- Department hierarchy
+CREATE INDEX idx_departments_faculty_id ON departments(faculty_id);
+CREATE INDEX idx_faculties_institute_id ON faculties(institute_id);
+```
+
+### Connection Pooling (Considerations for further scale, not needed right now)
+
+HikariCP configuration for ~50 concurrent users:
+
+```yaml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+```
+
+## References
+
+- [PostgreSQL Documentation](https://www.postgresql.org/docs)
+- [Spring Data JPA Reference](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/)

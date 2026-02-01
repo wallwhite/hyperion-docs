@@ -1,0 +1,63 @@
+---
+title: C4 Diagrams
+description: Multi-level architecture views using C4 model
+icon: Layers
+---
+
+## About
+
+The C4 model provides a hierarchical set of diagrams:
+
+1. **System Context** - Big picture
+2. **Container** - High-level technical blocks
+3. **Component** - Components within containers
+4. **Code** - Class diagrams (rarely needed). NOTE: we use **Service diagrams** instead.
+
+## Explanation of levels
+
+### System Context Diagram
+
+- **Goal**: to show what the system is, who interacts with it, and for what purpose.
+- **Focus**: external actors (users, other systems) and the system itself as a “black box”.
+- **Questions it answers**:
+  - Who uses the system?
+  - Which external systems are integrated?
+  - What role does the system play in the business context?
+
+### Container Diagram
+
+- **Goal**: to show the internal structure of the system — its main components/services (containers), how they interact with each other, and how they interact with the external world.
+- **Focus**: any executable unit, such as a web application, microservice, message queue, etc.
+- **Questions it answers**:
+  - What are the main building blocks of the system?
+  - How do these parts communicate with each other?
+
+### Component Diagram
+
+- **Goal**: to show the internal structure of a single container — which modules or components it consists of and how they interact.
+- **Focus**: logical parts of the code (classes, services, controllers, repositories, etc.).
+- **Questions it answers**:
+  - How is the code organized inside the container?
+  - Which core services implement the business logic?
+
+### Code Diagram (are not used here)
+
+- **Goal**: to show implementation details — how a component is implemented at the level of classes, functions, or modules.
+- **Focus**: usually not a mandatory level, but useful for documenting complex or critical parts of the system.
+- **Questions it answers**:
+  - How is this component implemented?
+  - Which classes, interfaces, and patterns are used?
+
+### Services
+
+- Ownership
+  - Context
+  - Team
+  - Project Manager (PM)/ Directly Responsible Individual (DRI)
+- Additional docs
+  - API doc link
+  - Solution Design link
+
+## Related Documentation
+
+- [c4model.com](https://c4model.com/diagrams/container)

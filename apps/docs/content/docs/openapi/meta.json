@@ -1,6 +1,0 @@
-{
-  "title": "OpenAPI Example",
-  "description": "A demo for OpenAPI schema",
-  "icon": "Globe",
-  "pages": ["index", "...(generated)"]
-}

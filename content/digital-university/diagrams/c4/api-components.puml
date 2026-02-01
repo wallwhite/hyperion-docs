@@ -1,0 +1,109 @@
+@startuml
+!include <C4/C4_Component>
+
+title NPP Portal API Server - Component Diagram (C3)
+
+' Color definitions for implementation status
+!define IMPLEMENTED #438DD5
+!define PLANNED #999999
+
+Container_Boundary(api, "API Server [Spring Boot, Java 21]") {
+
+    ' === Controllers Layer (IMPLEMENTED) ===
+    Component(userCtrl, "UserController", "REST Controller", "User CRUD operations", $tags="implemented")
+    Component(activityCtrl, "ActivityController", "REST Controller", "Activity management for teachers", $tags="implemented")
+    Component(profileCtrl, "UserProfileController", "REST Controller", "Profile details, photos, department assignments", $tags="implemented")
+    Component(deptCtrl, "DepartmentController", "REST Controller", "Department management", $tags="implemented")
+    Component(facultyCtrl, "FacultyController", "REST Controller", "Faculty management", $tags="implemented")
+    Component(instituteCtrl, "InstituteController", "REST Controller", "Institute management", $tags="implemented")
+    Component(dictCtrl, "DictionaryController", "REST Controller", "Reference data (degrees, positions, honors)", $tags="implemented")
+    Component(actDetailCtrl, "ActivityDetailsController", "REST Controller", "Activity coefficients and norms", $tags="implemented")
+
+    ' === Public Controllers (IMPLEMENTED) ===
+    Component(publicCtrl, "Public Controllers", "REST Controllers", "Read-only access for guests:\nPublicUserController,\nPublicActivityController,\nPublicDepartmentController", $tags="implemented")
+
+    ' === Planned Controllers ===
+    Component(authCtrl, "AuthController", "REST Controller", "Login, logout, token refresh\n[NOT YET IMPLEMENTED]", $tags="planned")
+    Component(statsCtrl, "StatisticsController", "REST Controller", "Ratings and statistics\n[NOT YET IMPLEMENTED]", $tags="planned")
+
+    ' === Services Layer (IMPLEMENTED) ===
+    Component(userSvc, "UserService", "Service", "User business logic, validation", $tags="implemented")
+    Component(activitySvc, "ActivityService", "Service", "Activity creation, co-authorship handling", $tags="implemented")
+    Component(profileSvc, "UserDetailsService", "Service", "Profile management, photo handling", $tags="implemented")
+    Component(orgSvc, "Organization Services", "Services", "Department, Faculty, Institute logic", $tags="implemented")
+    Component(dictSvc, "Dictionary Services", "Services", "Reference data management", $tags="implemented")
+
+    ' === Planned Services ===
+    Component(authSvc, "AuthService", "Service", "JWT generation, validation\n[NOT YET IMPLEMENTED]", $tags="planned")
+    Component(statsSvc, "StatisticsService", "Service", "Rating calculations\n[NOT YET IMPLEMENTED]", $tags="planned")
+
+    ' === Repositories Layer (IMPLEMENTED) ===
+    Component(userRepo, "UserRepository", "JPA Repository", "User entity persistence", $tags="implemented")
+    Component(activityRepo, "ActivityRepository", "JPA Repository", "Activity entity persistence", $tags="implemented")
+    Component(userActivityRepo, "UserActivityRepository", "JPA Repository", "Co-authorship relationships", $tags="implemented")
+    Component(orgRepos, "Organization Repositories", "JPA Repositories", "Department, Faculty, Institute", $tags="implemented")
+    Component(dictRepos, "Dictionary Repositories", "JPA Repositories", "Degrees, Positions, Honors, etc.", $tags="implemented")
+
+    ' === Security Components (PLANNED) ===
+    Component(jwtFilter, "JwtAuthenticationFilter", "Security Filter", "Token validation on requests\n[NOT YET IMPLEMENTED]", $tags="planned")
+    Component(secConfig, "SecurityConfig", "Configuration", "Currently permits all requests\n[Auth disabled in dev]", $tags="implemented")
+
+    ' === Cross-Cutting (IMPLEMENTED) ===
+    Component(exHandler, "GlobalExceptionHandler", "Controller Advice", "Standardized error responses", $tags="implemented")
+    Component(mappers, "MapStruct Mappers", "Mappers", "Entity <-> DTO conversions", $tags="implemented")
+    Component(auditing, "JPA Auditing", "Configuration", "Auto timestamps (createdAt, updatedAt)", $tags="implemented")
+}
+
+' === External Systems ===
+ContainerDb(db, "PostgreSQL", "Database", "Stores all application data")
+Container(redis, "Valkey (Redis)", "Cache", "Token storage [PLANNED]")
+
+' === Relationships - Controllers to Services ===
+Rel(userCtrl, userSvc, "Uses")
+Rel(activityCtrl, activitySvc, "Uses")
+Rel(profileCtrl, profileSvc, "Uses")
+Rel(deptCtrl, orgSvc, "Uses")
+Rel(facultyCtrl, orgSvc, "Uses")
+Rel(instituteCtrl, orgSvc, "Uses")
+Rel(dictCtrl, dictSvc, "Uses")
+Rel(actDetailCtrl, dictSvc, "Uses")
+Rel(publicCtrl, userSvc, "Uses")
+Rel(publicCtrl, activitySvc, "Uses")
+Rel(authCtrl, authSvc, "Uses", $tags="planned")
+Rel(statsCtrl, statsSvc, "Uses", $tags="planned")
+
+' === Relationships - Services to Repositories ===
+Rel(userSvc, userRepo, "Uses")
+Rel(activitySvc, activityRepo, "Uses")
+Rel(activitySvc, userActivityRepo, "Uses")
+Rel(profileSvc, userRepo, "Uses")
+Rel(orgSvc, orgRepos, "Uses")
+Rel(dictSvc, dictRepos, "Uses")
+Rel(statsSvc, activityRepo, "Uses", $tags="planned")
+Rel(statsSvc, userActivityRepo, "Uses", $tags="planned")
+
+' === Relationships - Repositories to Database ===
+Rel(userRepo, db, "Reads/Writes", "JDBC")
+Rel(activityRepo, db, "Reads/Writes", "JDBC")
+Rel(userActivityRepo, db, "Reads/Writes", "JDBC")
+Rel(orgRepos, db, "Reads/Writes", "JDBC")
+Rel(dictRepos, db, "Reads/Writes", "JDBC")
+
+' === Relationships - Security ===
+Rel(authSvc, redis, "Stores tokens", "TCP:6379", $tags="planned")
+Rel(jwtFilter, authSvc, "Validates tokens", $tags="planned")
+
+' === Legend ===
+SHOW_LEGEND()
+
+note right of authCtrl
+  <b>Implementation Status</b>
+  ----
+  Blue components: IMPLEMENTED
+  Gray components: PLANNED (not yet implemented)
+
+  See ADR-003 for authentication design
+  See OpenAPI spec for planned statistics endpoints
+end note
+
+@enduml

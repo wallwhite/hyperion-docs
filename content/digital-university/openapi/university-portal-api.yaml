@@ -1,0 +1,3332 @@
+openapi: 3.0.3
+info:
+  title: University Faculty Work Portal API
+  description: |
+    API для системи планування, звітування та оцінювання роботи викладачів університету.
+    
+    **Типи користувачів:**
+    - GUEST - незареєстрований користувач (публічний доступ)
+    - TEACHER - викладач
+    - DIRECTOR - завідувач кафедри/декан (має права викладача + додаткові)
+    - ADMIN - адміністратор системи
+    
+    **Автентифікація:**
+    - JWT tokens (Access: 30 хв, Refresh: 30 днів)
+    - Hybrid strategy з Redis кешуванням
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@stu.cn.ua
+
+servers:
+  - url: https://npp.stu.cn.ua/api/v1
+    description: Production server
+  # - url: http://localhost:8080/api/v1
+  #   description: Development server
+
+tags:
+  - name: Auth
+    description: Автентифікація та управління токенами
+  - name: Users
+    description: Управління користувачами
+  - name: User Profile
+    description: Профіль викладача
+  - name: Activities
+    description: Роботи викладачів (наукові, методичні, організаційні)
+  - name: Departments
+    description: Кафедри
+  - name: Faculties
+    description: Факультети
+  - name: Institutes
+    description: Інститути
+  - name: Dictionaries
+    description: Довідники (посади, звання, рівні англійської)
+  - name: Statistics
+    description: Рейтинги та статистика
+  - name: Public
+    description: Публічні endpoint'и для гостей
+  - name: System
+    description: Системні endpoint'и (read-only режим)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ==================== AUTH SCHEMAS ====================
+
+    LoginRequest:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+          example: "shevchenko.o.m"
+        password:
+          type: string
+          format: password
+          example: "SecurePassword123!"
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (діє 30 хв)
+        refreshToken:
+          type: string
+          description: JWT refresh token (діє 30 днів)
+        tokenType:
+          type: string
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Час життя access token в секундах
+          example: 1800
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    SetPasswordRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+          description: Одноразовий токен із email
+        password:
+          type: string
+          format: password
+          minLength: 8
+
+    ResetPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: "shevchenko@stu.cn.ua"
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+
+    # ==================== USER SCHEMAS ====================
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        uuid:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+          example: "Олександр"
+        lastName:
+          type: string
+          example: "Шевченко"
+        patronymic:
+          type: string
+          example: "Миколайович"
+        login:
+          type: string
+          example: "shevchenko.o.m"
+        email:
+          type: string
+          format: email
+          example: "shevchenko@stu.cn.ua"
+        role:
+          type: string
+          enum: [TEACHER, DIRECTOR, ADMIN]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        details:
+          $ref: '#/components/schemas/UserDetailsResponse'
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDepartmentResponse'
+
+    PublicUserResponse:
+      type: object
+      description: "Публічна інформація про викладача (тільки основні дані)"
+      properties:
+        id:
+          type: integer
+        uuid:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        patronymic:
+          type: string
+        email:
+          type: string
+        photo:
+          type: string
+          nullable: true
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicUserDepartmentResponse'
+
+    UserDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        photo:
+          type: string
+          nullable: true
+          description: URL фотографії
+        degree:
+          $ref: '#/components/schemas/DictionaryItemResponse'
+        position:
+          $ref: '#/components/schemas/DictionaryItemResponse'
+        englishLevel:
+          $ref: '#/components/schemas/DictionaryItemResponse'
+        nasAffiliation:
+          $ref: '#/components/schemas/DictionaryItemResponse'
+        honors:
+          $ref: '#/components/schemas/DictionaryItemResponse'
+
+    UserDepartmentResponse:
+      type: object
+      properties:
+        department:
+          $ref: '#/components/schemas/DepartmentResponse'
+        joint:
+          type: integer
+          nullable: true
+          description: "Суміщення ставок"
+        workload:
+          type: number
+          format: float
+          nullable: true
+          description: "Навантаження"
+
+    PublicUserDepartmentResponse:
+      type: object
+      description: "Публічна версія - без суміщення та навантаження"
+      properties:
+        department:
+          $ref: '#/components/schemas/DepartmentResponse'
+
+    CreateUserRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - patronymic
+        - email
+        - role
+      properties:
+        firstName:
+          type: string
+          example: "Олександр"
+        lastName:
+          type: string
+          example: "Шевченко"
+        patronymic:
+          type: string
+          example: "Миколайович"
+        email:
+          type: string
+          format: email
+          example: "shevchenko@stu.cn.ua"
+        role:
+          type: string
+          enum: [TEACHER, DIRECTOR, ADMIN]
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        patronymic:
+          type: string
+        email:
+          type: string
+          format: email
+
+    UpdateUserDetailsRequest:
+      type: object
+      properties:
+        degreeId:
+          type: integer
+        positionId:
+          type: integer
+        englishLevelId:
+          type: integer
+        nasAffiliationId:
+          type: integer
+        honorsId:
+          type: integer
+
+    AssignDepartmentRequest:
+      type: object
+      required:
+        - departmentId
+      properties:
+        departmentId:
+          type: integer
+        joint:
+          type: integer
+          nullable: true
+        workload:
+          type: number
+          format: float
+          nullable: true
+
+    UpdateDepartmentAssignmentRequest:
+      type: object
+      properties:
+        joint:
+          type: integer
+          nullable: true
+        workload:
+          type: number
+          format: float
+          nullable: true
+
+    # ==================== ACTIVITY SCHEMAS ====================
+
+    ActivityResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+        year:
+          type: integer
+          example: 2024
+        semester:
+          type: integer
+          minimum: 0
+          maximum: 2
+          description: "0 - весь рік, 1 - перший семестр, 2 - другий семестр"
+        worksType:
+          type: string
+          enum: [SCIENCE, METHOD, ORG]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        activityDetails:
+          $ref: '#/components/schemas/ActivityDetailsResponse'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserResponse'
+
+    ActivityDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        numInOrd:
+          type: integer
+          nullable: true
+          description: "Номер у наказі (необов'язково)"
+        numInRegulations:
+          type: integer
+          description: "Номер у положенні (обов'язково)"
+        coefficient:
+          type: number
+          format: float
+          description: "Коефіцієнт для розрахунку рейтингу"
+        normTime:
+          type: number
+          format: float
+          description: "Нормований час для розрахунку годин"
+        additionalDetails:
+          type: object
+          description: "JSON з додатковими полями для різних типів робіт"
+          additionalProperties: true
+        active:
+          type: boolean
+
+    PublicActivityResponse:
+      type: object
+      description: "Публічна версія роботи - без коефіцієнтів та службових полів"
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+        year:
+          type: integer
+        semester:
+          type: integer
+          description: "0 - весь рік, 1 - перший семестр, 2 - другий семестр"
+        worksType:
+          type: string
+          enum: [SCIENCE, METHOD, ORG]
+        createdAt:
+          type: string
+          format: date-time
+        users:
+          type: array
+          description: "Автори роботи (тільки ПІБ, без деталей)"
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              firstName:
+                type: string
+              lastName:
+                type: string
+              patronymic:
+                type: string
+
+    CreateActivityRequest:
+      type: object
+      required:
+        - description
+        - year
+        - semester
+        - worksType
+        - activityDetailsId
+      properties:
+        description:
+          type: string
+          minLength: 3
+          maxLength: 1000
+        year:
+          type: integer
+          minimum: 2020
+          maximum: 2100
+        semester:
+          type: integer
+          minimum: 0
+          maximum: 2
+        worksType:
+          type: string
+          enum: [SCIENCE, METHOD, ORG]
+        activityDetailsId:
+          type: integer
+          description: "ID з довідника activity_details"
+        coAuthorIds:
+          type: array
+          items:
+            type: integer
+          description: "ID співавторів (інших викладачів)"
+
+    UpdateActivityRequest:
+      type: object
+      properties:
+        description:
+          type: string
+        year:
+          type: integer
+        semester:
+          type: integer
+        activityDetailsId:
+          type: integer
+        coAuthorIds:
+          type: array
+          items:
+            type: integer
+
+    CreateActivityDetailsRequest:
+      type: object
+      required:
+        - numInRegulations
+        - coefficient
+        - normTime
+      properties:
+        numInOrd:
+          type: integer
+          nullable: true
+        numInRegulations:
+          type: integer
+        coefficient:
+          type: number
+          format: float
+        normTime:
+          type: number
+          format: float
+        additionalDetails:
+          type: object
+          additionalProperties: true
+
+    # ==================== STRUCTURE SCHEMAS ====================
+
+    DepartmentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        depLogo:
+          type: string
+        depHead:
+          type: string
+        depPage:
+          type: string
+        active:
+          type: boolean
+        faculty:
+          $ref: '#/components/schemas/FacultyResponse'
+
+    CreateDepartmentRequest:
+      type: object
+      required:
+        - name
+        - facultyId
+        - depHead
+      properties:
+        name:
+          type: string
+        facultyId:
+          type: integer
+        depLogo:
+          type: string
+        depHead:
+          type: string
+        depPage:
+          type: string
+
+    UpdateDepartmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        facultyId:
+          type: integer
+        depLogo:
+          type: string
+        depHead:
+          type: string
+        depPage:
+          type: string
+
+    FacultyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        facLogo:
+          type: string
+        facHead:
+          type: string
+        facPage:
+          type: string
+        active:
+          type: boolean
+        institute:
+          $ref: '#/components/schemas/InstituteResponse'
+
+    CreateFacultyRequest:
+      type: object
+      required:
+        - name
+        - instituteId
+        - facHead
+      properties:
+        name:
+          type: string
+        instituteId:
+          type: integer
+        facLogo:
+          type: string
+        facHead:
+          type: string
+        facPage:
+          type: string
+
+    UpdateFacultyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        instituteId:
+          type: integer
+        facLogo:
+          type: string
+        facHead:
+          type: string
+        facPage:
+          type: string
+
+    InstituteResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        instLogo:
+          type: string
+        instHead:
+          type: string
+        instPage:
+          type: string
+        active:
+          type: boolean
+
+    CreateInstituteRequest:
+      type: object
+      required:
+        - name
+        - instHead
+      properties:
+        name:
+          type: string
+        instLogo:
+          type: string
+        instHead:
+          type: string
+        instPage:
+          type: string
+
+    UpdateInstituteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        instLogo:
+          type: string
+        instHead:
+          type: string
+        instPage:
+          type: string
+
+    # ==================== DICTIONARY SCHEMAS (UNIFIED) ====================
+
+    DictionaryItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        shortName:
+          type: string
+          description: "Тільки для degrees"
+        level:
+          type: string
+          description: "Тільки для english-levels"
+        active:
+          type: boolean
+
+    CreateDictionaryItemRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        shortName:
+          type: string
+          description: "Тільки для degrees"
+
+    # ==================== STATISTICS SCHEMAS ====================
+
+    TeacherRatingResponse:
+      type: object
+      properties:
+        teacherId:
+          type: integer
+        teacher:
+          $ref: '#/components/schemas/UserResponse'
+        totalRating:
+          type: number
+          format: float
+          description: "Загальний рейтинг"
+        scienceRating:
+          type: number
+          format: float
+          description: "Рейтинг з наукової роботи"
+        methodRating:
+          type: number
+          format: float
+          description: "Рейтинг з методичної роботи"
+        orgRating:
+          type: number
+          format: float
+          description: "Рейтинг з організаційної роботи"
+        totalHours:
+          type: number
+          format: float
+          description: "Загальна кількість годин"
+        scienceHours:
+          type: number
+          format: float
+        methodHours:
+          type: number
+          format: float
+        orgHours:
+          type: number
+          format: float
+        year:
+          type: integer
+        semester:
+          type: integer
+
+    DepartmentRatingResponse:
+      type: object
+      properties:
+        departmentId:
+          type: integer
+        department:
+          $ref: '#/components/schemas/DepartmentResponse'
+        averageRating:
+          type: number
+          format: float
+        totalRating:
+          type: number
+          format: float
+        teachersCount:
+          type: integer
+        year:
+          type: integer
+        semester:
+          type: integer
+        topTeachers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherRatingResponse'
+
+    # ==================== COMMON SCHEMAS ====================
+
+    PageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            type: object
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+paths:
+  # ==================== AUTH ENDPOINTS ====================
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Вхід в систему
+      description: Автентифікація користувача
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успішна автентифікація
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Невірний логін або пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Оновлення токена
+      description: Отримання нового access token за допомогою refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Токен успішно оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Невалідний або протермінований refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Вихід з системи
+      description: Інвалідація refresh token
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Успішний вихід
+        '401':
+          description: Не авторизований
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/set-password:
+    post:
+      tags:
+        - Auth
+      summary: Встановлення пароля (перший вхід)
+      description: Користувач встановлює пароль за одноразовим токеном із email
+      operationId: setPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPasswordRequest'
+      responses:
+        '200':
+          description: Пароль встановлено
+        '400':
+          description: Невалідний або протермінований токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}/departments:
+    get:
+      tags:
+        - User Profile
+      summary: Отримання кафедр користувача
+      description: |
+        Отримання списку кафедр користувача з інформацією про суміщення та навантаження.
+        **Доступ:**
+        - Власний профіль (бачить свої дані)
+        - ADMIN (бачить будь-якого користувача)
+        - DIRECTOR (бачить викладачів своєї кафедри)
+      operationId: getUserDepartments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список кафедр користувача
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDepartmentResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - User Profile
+      summary: Призначення на кафедру
+      description: |
+        Додавання викладача на кафедру з вказанням суміщення та навантаження.
+        **Доступ:** тільки ADMIN
+      operationId: assignDepartment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignDepartmentRequest'
+      responses:
+        '201':
+          description: Викладача призначено на кафедру
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача або кафедру не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{userId}/departments/{departmentId}:
+    put:
+      tags:
+        - User Profile
+      summary: Оновлення даних про кафедру
+      description: |
+        Оновлення суміщення та навантаження на кафедрі.
+        **Доступ:** тільки ADMIN
+      operationId: updateUserDepartment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDepartmentAssignmentRequest'
+      responses:
+        '200':
+          description: Дані оновлено
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача, кафедру або призначення не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - User Profile
+      summary: Видалення з кафедри
+      description: |
+        Видалення викладача з кафедри.
+        **Доступ:** тільки ADMIN
+      operationId: removeDepartment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Викладача видалено з кафедри
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача, кафедру або призначення не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== ACTIVITIES ENDPOINTS ====================
+
+  /activities:
+    get:
+      tags:
+        - Activities
+      summary: Список робіт
+      description: |
+        Отримання списку робіт (фільтрація для власних або всіх).
+        **Доступ:** Authenticated users
+      operationId: getActivities
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: userId
+          in: query
+          description: "Фільтр по користувачу (якщо не вказано - власні роботи)"
+          schema:
+            type: integer
+        - name: worksType
+          in: query
+          description: "Фільтр по типу роботи"
+          schema:
+            type: string
+            enum: [SCIENCE, METHOD, ORG]
+        - name: year
+          in: query
+          description: "Фільтр по року"
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          description: "Фільтр по семестру"
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 2
+        - name: yearFrom
+          in: query
+          description: "Період з (рік)"
+          schema:
+            type: integer
+        - name: yearTo
+          in: query
+          description: "Період до (рік)"
+          schema:
+            type: integer
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Список робіт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+        '401':
+          description: Не авторизований
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Activities
+      summary: Створення роботи
+      description: |
+        Створення нової роботи.
+        **Доступ:** TEACHER, DIRECTOR
+        **Обмеження:** read-only режим блокує створення
+      operationId: createActivity
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivityRequest'
+      responses:
+        '201':
+          description: Роботу створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав або read-only режим активний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /activities/{id}:
+    get:
+      tags:
+        - Activities
+      summary: Отримання роботи за ID
+      description: |
+        Деталі роботи.
+        **Доступ:** authenticated users
+      operationId: getActivityById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі роботи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+        '401':
+          description: Не авторизований
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Роботу не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Activities
+      summary: Оновлення роботи
+      description: |
+        Оновлення роботи.
+        **Доступ:** тільки автор роботи (власник або співавтор)
+        **Обмеження:** read-only режим блокує редагування
+      operationId: updateActivity
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateActivityRequest'
+      responses:
+        '200':
+          description: Роботу оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: |
+            Недостатньо прав (тільки автор) або система в режимі read-only
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Роботу не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Activities
+      summary: Видалення роботи (soft delete)
+      description: |
+        Помітка роботи як неактивної.
+        **Доступ:** тільки власник роботи (перший автор)
+        **Обмеження:** read-only режим блокує видалення
+      operationId: deleteActivity
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Роботу видалено
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: |
+            Недостатньо прав (тільки власник) або система в режимі read-only
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Роботу не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== ACTIVITY DETAILS (DICTIONARIES) ====================
+
+  /activity-details:
+    get:
+      tags:
+        - Activities
+      summary: Довідник типів робіт
+      description: |
+        Отримання списку всіх типів робіт з коефіцієнтами.
+        **Доступ:** authenticated users (TEACHER, DIRECTOR, ADMIN)
+      operationId: getActivityDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Список типів робіт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+        '401':
+          description: Не авторизований
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Activities
+      summary: Створення типу роботи
+      description: |
+        Додавання нового типу роботи до довідника.
+        **Доступ:** тільки ADMIN
+      operationId: createActivityDetails
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivityDetailsRequest'
+      responses:
+        '201':
+          description: Тип роботи створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityDetailsResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /activity-details/{id}:
+    get:
+      tags:
+        - Activities
+      summary: Деталі типу роботи
+      description: |
+        **Доступ:** authenticated users
+      operationId: getActivityDetailsById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі типу роботи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityDetailsResponse'
+        '401':
+          description: Не авторизований
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Тип роботи не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Activities
+      summary: Оновлення типу роботи
+      description: |
+        Редагування типу роботи.
+        **Доступ:** тільки ADMIN
+      operationId: updateActivityDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivityDetailsRequest'
+      responses:
+        '200':
+          description: Тип роботи оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityDetailsResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Тип роботи не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Activities
+      summary: Видалення типу роботи
+      description: |
+        Soft delete типу роботи.
+        **Доступ:** тільки ADMIN
+      operationId: deleteActivityDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Тип роботи видалено
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Тип роботи не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== DEPARTMENTS ====================
+
+  /departments:
+    get:
+      tags:
+        - Departments
+      summary: Список кафедр
+      description: Отримання списку всіх кафедр
+      operationId: getDepartments
+      parameters:
+        - name: facultyId
+          in: query
+          schema:
+            type: integer
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Список кафедр
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartmentResponse'
+
+    post:
+      tags:
+        - Departments
+      summary: Створення кафедри
+      description: |
+        Створення нової кафедри.
+        **Доступ:** тільки ADMIN
+      operationId: createDepartment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+      responses:
+        '201':
+          description: Кафедру створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /departments/{id}:
+    get:
+      tags:
+        - Departments
+      summary: Деталі кафедри
+      operationId: getDepartmentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі кафедри
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentResponse'
+        '404':
+          description: Кафедру не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Departments
+      summary: Оновлення кафедри
+      description: |
+        Оновлення даних кафедри.
+        **Доступ:** тільки ADMIN
+      operationId: updateDepartment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDepartmentRequest'
+      responses:
+        '200':
+          description: Кафедру оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Кафедру не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Departments
+      summary: Видалення кафедри
+      description: |
+        Soft delete кафедри.
+        **Доступ:** тільки ADMIN
+      operationId: deleteDepartment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Кафедру видалено
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Кафедру не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== FACULTIES ====================
+
+  /faculties:
+    get:
+      tags:
+        - Faculties
+      summary: Список факультетів
+      operationId: getFaculties
+      parameters:
+        - name: instituteId
+          in: query
+          schema:
+            type: integer
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Список факультетів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FacultyResponse'
+
+    post:
+      tags:
+        - Faculties
+      summary: Створення факультету
+      description: |
+        Створення нового факультету.
+        **Доступ:** тільки ADMIN
+      operationId: createFaculty
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFacultyRequest'
+      responses:
+        '201':
+          description: Факультет створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacultyResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /faculties/{id}:
+    get:
+      tags:
+        - Faculties
+      summary: Деталі факультету
+      operationId: getFacultyById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі факультету
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacultyResponse'
+        '404':
+          description: Факультет не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Faculties
+      summary: Оновлення факультету
+      description: |
+        **Доступ:** тільки ADMIN
+      operationId: updateFaculty
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFacultyRequest'
+      responses:
+        '200':
+          description: Факультет оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacultyResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Факультет не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Faculties
+      summary: Видалення факультету
+      description: |
+        **Доступ:** тільки ADMIN
+      operationId: deleteFaculty
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Факультет видалено
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Факультет не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== INSTITUTES ====================
+
+  /institutes:
+    get:
+      tags:
+        - Institutes
+      summary: Список інститутів
+      operationId: getInstitutes
+      parameters:
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Список інститутів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstituteResponse'
+
+    post:
+      tags:
+        - Institutes
+      summary: Створення інституту
+      description: |
+        **Доступ:** тільки ADMIN
+      operationId: createInstitute
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInstituteRequest'
+      responses:
+        '201':
+          description: Інститут створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstituteResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /institutes/{id}:
+    get:
+      tags:
+        - Institutes
+      summary: Деталі інституту
+      operationId: getInstituteById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі інституту
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstituteResponse'
+        '404':
+          description: Інститут не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Institutes
+      summary: Оновлення інституту
+      description: |
+        **Доступ:** тільки ADMIN
+      operationId: updateInstitute
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInstituteRequest'
+      responses:
+        '200':
+          description: Інститут оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstituteResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Інститут не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Institutes
+      summary: Видалення інституту
+      description: |
+        **Доступ:** тільки ADMIN
+      operationId: deleteInstitute
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Інститут видалено
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Інститут не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== DICTIONARIES (UNIFIED) ====================
+
+  /dictionaries/{type}:
+    get:
+      tags:
+        - Dictionaries
+      summary: Список елементів довідника
+      description: |
+        Отримання списку елементів довідника за типом.
+        **type:** degrees | positions | english-levels | nas-affiliations | honors
+        **Доступ:** authenticated users
+      operationId: getDictionaryItems
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [degrees, positions, english-levels, nas-affiliations, honors]
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Список елементів довідника
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DictionaryItemResponse'
+        '401':
+          description: Не авторизований
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Невалідний тип довідника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Dictionaries
+      summary: Створення елемента довідника
+      description: |
+        Додавання нового елемента до довідника.
+        **Доступ:** тільки ADMIN
+      operationId: createDictionaryItem
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [degrees, positions, english-levels, nas-affiliations, honors]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDictionaryItemRequest'
+      responses:
+        '201':
+          description: Елемент довідника створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DictionaryItemResponse'
+        '400':
+          description: Невалідний тип довідника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dictionaries/{type}/{id}:
+    get:
+      tags:
+        - Dictionaries
+      summary: Деталі елемента довідника
+      description: |
+        **Доступ:** authenticated users
+      operationId: getDictionaryItemById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [degrees, positions, english-levels, nas-affiliations, honors]
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі елемента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DictionaryItemResponse'
+        '400':
+          description: Невалідний тип довідника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Не авторизований
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Елемент не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Dictionaries
+      summary: Оновлення елемента довідника
+      description: |
+        **Доступ:** тільки ADMIN
+      operationId: updateDictionaryItem
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [degrees, positions, english-levels, nas-affiliations, honors]
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDictionaryItemRequest'
+      responses:
+        '200':
+          description: Елемент оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DictionaryItemResponse'
+        '400':
+          description: Невалідний тип довідника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Елемент не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Dictionaries
+      summary: Видалення елемента довідника
+      description: |
+        Soft delete елемента.
+        **Доступ:** тільки ADMIN
+      operationId: deleteDictionaryItem
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [degrees, positions, english-levels, nas-affiliations, honors]
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Елемент видалено
+        '400':
+          description: Невалідний тип довідника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Елемент не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== STATISTICS & RATINGS ====================
+
+  /statistics/teacher/{teacherId}/rating:
+    get:
+      tags:
+        - Statistics
+      summary: Рейтинг викладача (публічний доступ)
+      description: |
+        Отримання рейтингу викладача (загальний + по типах робіт).
+        **Доступно для всіх, включно з гостями (без авторизації).**
+        Включає як бали (rating), так і години (hours).
+      operationId: getTeacherRating
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Рейтинг викладача (бали та години)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherRatingResponse'
+        '404':
+          description: Викладача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /statistics/teacher/{teacherId}/science-rating:
+    get:
+      tags:
+        - Statistics
+      summary: Рейтинг наукової роботи викладача (публічний)
+      description: Бали та години тільки по науковій роботі
+      operationId: getTeacherScienceRating
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Рейтинг наукової роботи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherRatingResponse'
+        '404':
+          description: Викладача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /statistics/teacher/{teacherId}/method-rating:
+    get:
+      tags:
+        - Statistics
+      summary: Рейтинг методичної роботи викладача (публічний)
+      description: Бали та години тільки по методичній роботі
+      operationId: getTeacherMethodRating
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Рейтинг методичної роботи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherRatingResponse'
+        '404':
+          description: Викладача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /statistics/teacher/{teacherId}/org-rating:
+    get:
+      tags:
+        - Statistics
+      summary: Рейтинг організаційної роботи викладача (публічний)
+      description: Бали та години тільки по організаційній роботі
+      operationId: getTeacherOrgRating
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Рейтинг організаційної роботи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherRatingResponse'
+        '404':
+          description: Викладача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /statistics/department/{departmentId}/rating:
+    get:
+      tags:
+        - Statistics
+      summary: Рейтинг кафедри
+      description: |
+        Рейтинг кафедри з топ-викладачами.
+        **Доступ:** 
+        - DIRECTOR цієї кафедри
+        - ADMIN
+      operationId: getDepartmentRating
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: "Кількість топ-викладачів у відповіді"
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Рейтинг кафедри
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentRatingResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: |
+            Недостатньо прав. 
+            Тільки DIRECTOR цієї кафедри або ADMIN можуть переглядати рейтинг кафедри.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Кафедру не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /statistics/my-department/rating:
+    get:
+      tags:
+        - Statistics
+      summary: Рейтинг моєї кафедри (для DIRECTOR)
+      description: |
+        Автоматично визначає кафедри поточного DIRECTOR і повертає рейтинг.
+        **Доступ:** тільки DIRECTOR
+      operationId: getMyDepartmentRating
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список рейтингів кафедр де користувач є DIRECTOR
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartmentRatingResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Тільки для ролі DIRECTOR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== PUBLIC ENDPOINTS ====================
+
+  /public/search/teacher:
+    get:
+      tags:
+        - Public
+      summary: Пошук викладача
+      description: Пошук викладача за ПІБ (публічний доступ)
+      operationId: searchTeacher
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: "ПІБ або частина ПІБ"
+          schema:
+            type: string
+            minLength: 3
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Результати пошуку
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicUserResponse'
+
+  /public/teacher/{teacherId}:
+    get:
+      tags:
+        - Public
+      summary: Публічний профіль викладача
+      description: |
+        Публічна інформація про викладача.
+        **Доступно:** тільки ПІБ, email, фото, кафедри (без службових полів).
+        **НЕ доступно:** ступінь, посада, рівень англійської, суміщення, навантаження.
+      operationId: getPublicTeacherProfile
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Публічний профіль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserResponse'
+        '404':
+          description: Викладача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /public/teacher/{teacherId}/activities:
+    get:
+      tags:
+        - Public
+      summary: Публічні роботи викладача
+      description: |
+        Список робіт викладача (доступний гостям).
+        **Без коефіцієнтів та службової інформації.**
+      operationId: getPublicTeacherActivities
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: worksType
+          in: query
+          schema:
+            type: string
+            enum: [SCIENCE, METHOD, ORG]
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список робіт (публічна версія)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicActivityResponse'
+        '404':
+          description: Викладача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /public/teacher/{teacherId}/rating:
+    get:
+      tags:
+        - Public
+      summary: Публічний рейтинг викладача
+      description: Рейтинг викладача (без службової інформації)
+      operationId: getPublicTeacherRating
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Публічний рейтинг
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherRatingResponse'
+        '404':
+          description: Викладача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /public/hierarchy/institutes:
+    get:
+      tags:
+        - Public
+      summary: Інститути (публічні)
+      description: Список всіх інститутів
+      operationId: getPublicInstitutes
+      responses:
+        '200':
+          description: Список інститутів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstituteResponse'
+
+  /public/hierarchy/faculties:
+    get:
+      tags:
+        - Public
+      summary: Факультети (публічні)
+      description: Список факультетів
+      operationId: getPublicFaculties
+      parameters:
+        - name: instituteId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список факультетів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FacultyResponse'
+
+  /public/hierarchy/departments:
+    get:
+      tags:
+        - Public
+      summary: Кафедри (публічні)
+      description: Список кафедр
+      operationId: getPublicDepartments
+      parameters:
+        - name: facultyId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список кафедр
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartmentResponse'
+
+  /public/hierarchy/department/{departmentId}/teachers:
+    get:
+      tags:
+        - Public
+      summary: Викладачі кафедри (публічні)
+      description: Список викладачів кафедри
+      operationId: getPublicDepartmentTeachers
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список викладачів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicUserResponse'
+        '404':
+          description: Кафедру не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== SYSTEM ENDPOINTS ====================
+
+  /system/read-only:
+    get:
+      tags:
+        - System
+      summary: Перевірка статусу read-only режиму
+      description: |
+        Повертає чи система в режимі read-only.
+        **Публічний endpoint** - доступний без авторизації для перевірки фронтендом.
+      operationId: getReadOnlyStatus
+      responses:
+        '200':
+          description: Статус read-only режиму
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  readOnly:
+                    type: boolean
+                    description: true якщо система в режимі read-only
+                  message:
+                    type: string
+                    nullable: true
+                    description: Повідомлення про причину (опціонально)
+                    example: "Система в режимі технічного обслуговування до 15:00"
+
+    post:
+      tags:
+        - System
+      summary: Увімкнення read-only режиму
+      description: |
+        Увімкнення режиму тільки для читання (блокує створення/редагування робіт).
+        **Доступ:** тільки ADMIN
+      operationId: enableReadOnlyMode
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: Повідомлення для користувачів
+                  example: "Технічне обслуговування до 15:00"
+      responses:
+        '200':
+          description: Read-only режим увімкнено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  readOnly:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - System
+      summary: Вимкнення read-only режиму
+      description: |
+        Вимкнення режиму тільки для читання.
+        **Доступ:** тільки ADMIN
+      operationId: disableReadOnlyMode
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Read-only режим вимкнено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  readOnly:
+                    type: boolean
+                    example: false
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/reset-password:
+    post:
+      tags:
+        - Auth
+      summary: Скидання пароля (адмін)
+      description: Адмін скидає пароль користувача (генерується новий токен)
+      operationId: resetPassword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Токен відправлено на email
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/change-password:
+    post:
+      tags:
+        - Auth
+      summary: Зміна пароля
+      description: Користувач змінює свій пароль
+      operationId: changePassword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Пароль змінено
+        '400':
+          description: Невірний старий пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== USER ENDPOINTS ====================
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Список користувачів
+      description: |
+        Отримання списку всіх користувачів.
+        **Доступ:** тільки ADMIN
+      operationId: getUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [TEACHER, DIRECTOR, ADMIN]
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список користувачів
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Users
+      summary: Створення користувача
+      description: |
+        Створення нового користувача. Генерується токен, відправляється email.
+        **Доступ:** тільки ADMIN
+      operationId: createUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Користувача створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт - користувач з таким email або login вже існує
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Отримання користувача за ID
+      description: |
+        Деталі користувача.
+        **Доступ:** ADMIN або власний профіль
+      operationId: getUserById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі користувача
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Users
+      summary: Оновлення користувача
+      description: |
+        Оновлення даних користувача (ПІБ, email).
+        **Доступ:** ADMIN або власний профіль
+      operationId: updateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Користувача оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Users
+      summary: Видалення користувача (soft delete)
+      description: |
+        Помітка користувача як неактивного.
+        **Доступ:** тільки ADMIN
+      operationId: deleteUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Користувача видалено
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав (тільки ADMIN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/me:
+    get:
+      tags:
+        - User Profile
+      summary: Поточний користувач
+      description: Отримання даних авторизованого користувача
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Дані поточного користувача
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}/details:
+    get:
+      tags:
+        - User Profile
+      summary: Отримання деталей профілю
+      description: |
+        Отримання додаткових даних викладача (ступінь, посада, англійська, НАН, звання).
+        **Доступ:** ADMIN або власний профіль
+      operationId: getUserDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Деталі профілю
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailsResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - User Profile
+      summary: Оновлення деталей профілю
+      description: |
+        Оновлення додаткових даних викладача (ступінь, посада, англійська, НАН, звання).
+        **Доступ:** ADMIN або власний профіль (TEACHER/DIRECTOR можуть редагувати свої дані)
+      operationId: updateUserDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDetailsRequest'
+      responses:
+        '200':
+          description: Деталі оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailsResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Користувача не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}/photo:
+    post:
+      tags:
+        - User Profile
+      summary: Завантаження фото викладача
+      description: |
+        Завантаження фото профілю (multipart/form-data).
+        **Доступ:** тільки власний профіль (TEACHER/DIRECTOR самі завантажують своє фото)
+      operationId: uploadUserPhoto
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - photo
+              properties:
+                photo:
+                  type: string
+                  format: binary
+                  description: "Файл зображення (JPEG, PNG). Макс. 5MB"
+      responses:
+        '200':
+          description: Фото успішно завантажено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photoUrl:
+                    type: string
+                    description: URL завантаженого фото
+                    example: "https://cdn.stu.cn.ua/photos/user_123.jpg"
+        '400':
+          description: Невалідний файл (формат або розмір)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Не авторизований або токен недійсний
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+            description: Недостатньо прав (тільки власний профіль)
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+        '413':
+            description: Файл занадто великий (більше 5MB)
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+

@@ -1,0 +1,28 @@
+@startuml
+!include /plantuml/themes/puml-theme-x-light.puml
+
+' TODO: Replace with actual sequence
+
+participant "Web Client" as Client
+participant "API Gateway" as Gateway
+participant "Service" as Service
+participant "Database" as DB
+
+Client -> Gateway: Request
+activate Gateway
+
+Gateway -> Service: Forward request
+activate Service
+
+Service -> DB: Query
+activate DB
+DB --> Service: Data
+deactivate DB
+
+Service --> Gateway: Response
+deactivate Service
+
+Gateway --> Client: Final response
+deactivate Gateway
+
+@enduml

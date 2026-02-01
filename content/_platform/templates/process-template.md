@@ -1,0 +1,98 @@
+# Process Documentation Template
+
+Use this template for documenting workflows that involve multiple people and steps.
+
+## When to Use
+
+Create a process document for:
+- Duty support rotation process
+- Branch strategy and PR workflow
+- Release process
+- Incident response procedure
+
+## Template
+
+```mdx
+---
+title: Process Name
+description: Brief description of the process
+---
+
+# Process Name
+
+## Overview
+Brief description of what this process covers and why it exists.
+
+## Who
+Define roles involved in this process:
+
+- **Role 1**: Responsibilities
+- **Role 2**: Responsibilities
+- **Role 3**: Responsibilities
+
+## When
+When does this process apply?
+
+- Trigger conditions
+- Frequency
+- Schedule (if applicable)
+
+## What
+Step-by-step process flow:
+
+### Step 1: [Action Name]
+**Responsible**: [Role]
+**Duration**: [Timeframe]
+
+Description of what happens in this step.
+
+**Inputs**:
+- Required information/resources
+
+**Outputs**:
+- What is produced
+
+**Actions**:
+1. Specific action 1
+2. Specific action 2
+3. Specific action 3
+
+### Step 2: [Action Name]
+[Continue pattern...]
+
+## Communication
+How stakeholders are informed throughout the process:
+
+- **Notification Type**: Who receives, when, and how
+- **Escalation Path**: When and how to escalate issues
+
+## Tools & Resources
+- Links to tools
+- Templates
+- Documentation references
+
+## Examples
+Real-world examples or scenarios illustrating the process.
+
+## FAQ
+Common questions about this process.
+```
+
+## Best Practices
+
+- **WHO, WHEN, WHAT**: Clearly define roles, timing, and actions
+- **Step-by-step**: Break down into sequential, manageable steps
+- **Responsibility**: Assign clear ownership for each step
+- **Communication**: Define how information flows
+- **Escalation**: Document when and how to escalate
+- **Tools**: List all tools and resources needed
+- **Examples**: Provide real-world scenarios
+- **Keep updated**: Review and update as process evolves
+
+## File Location
+
+Place process docs in: `/process/{topic}/`
+
+Examples:
+- `/process/duty/support-rotation.mdx`
+- `/process/branch/pr-workflow.mdx`
