@@ -1,10 +1,15 @@
-# ADR Template
+---
+title: ADR Template
+description: Template for Architecture Decision Records (ADRs)
+icon: FileCode
+---
 
 Use this template for Architecture Decision Records (ADRs).
 
 ## When to Use
 
 Create an ADR when making significant architectural decisions that will impact the system long-term, such as:
+
 - Choosing microservices vs monolith
 - Selecting a database technology
 - Deciding on authentication approach
@@ -21,11 +26,13 @@ description: Brief summary of the decision
 # ADR-{number}: Decision Title
 
 ## Status
+
 **Status**: [Proposed | Accepted | Deprecated | Superseded]
 **Date**: YYYY-MM-DD
 **Decision Makers**: [Names/Roles]
 
 ## Context
+
 What is the issue or situation that we're facing? What factors influenced this decision?
 
 - Background information
@@ -33,11 +40,13 @@ What is the issue or situation that we're facing? What factors influenced this d
 - Forces at play
 
 ## Decision
+
 What is the change that we're proposing and/or doing?
 
 Clear statement of the architectural decision.
 
 ## Rationale
+
 Why did we choose this option? What are the reasons behind this decision?
 
 ### Considered Options
@@ -57,17 +66,21 @@ Why did we choose this option? What are the reasons behind this decision?
 ## Consequences
 
 ### Positive
+
 - What becomes easier
 - What improves
 
 ### Negative
+
 - What becomes harder
 - Trade-offs made
 
 ### Neutral
+
 - Changes that are neither positive nor negative
 
 ## Implementation Notes
+
 How will this decision be implemented?
 
 - Action items
@@ -75,6 +88,7 @@ How will this decision be implemented?
 - Timeline
 
 ## References
+
 - Related ADRs
 - External resources
 - Documentation links
@@ -91,6 +105,6 @@ How will this decision be implemented?
 
 ## File Location
 
-Place ADRs in: `/architecture/{project}/adr/ADR-{number}-title.mdx`
+Place ADRs in: `content/{project}/docs/architecture/adr/ADR-{number}-title.mdx`
 
-Example: `/architecture/billing-system/adr/ADR-001-microservices-architecture.mdx`
+Example: `content/billing-system/docs/architecture/adr/ADR-001-microservices-architecture.mdx`

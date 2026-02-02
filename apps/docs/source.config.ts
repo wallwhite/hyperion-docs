@@ -1,8 +1,8 @@
 import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadocs-mdx/config';
 
-// Platform documentation
-export const platform = defineDocs({
-  dir: '../../content/_platform/docs',
+// Contributing documentation
+export const contributing = defineDocs({
+  dir: '../../content/_contributing/docs',
   docs: {
     schema: frontmatterSchema,
     postprocess: {

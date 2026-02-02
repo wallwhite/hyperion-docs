@@ -1,20 +1,10 @@
 ---
-title: Contributing
-description: How to add and maintain documentation in the Hyperion Docs system
-icon: BookOpen
+title: Contributing to Documentation
+description: How to add and maintain documentation in Hyperion Docs
+icon: Book
 ---
 
-# Contributing to Documentation
-
-This guide explains how to add and maintain documentation in the Hyperion Docs system.
-
-## Quick Links
-
-- **Templates**: See [Templates](./templates) for ready-to-use documentation templates
-- **Guides**:
-  - [Documentation Types](./guides/documentation-types) - When to use each type
-  - [Diagram Guide](./guides/diagram-guide) - Working with PlantUML, Mermaid, and diagrams
-  - [Writing Guide](./guides/writing-guide) - Style and formatting standards
+This section covers how to contribute documentation to Hyperion Docs.
 
 ## Documentation Structure
 
@@ -24,11 +14,10 @@ The documentation is organized to support multiple projects:
 
 ```
 content/
-├── _platform/                     # Platform documentation (this section)
-│   ├── docs/
-│   │   ├── guides/               # Usage guides
-│   │   └── contributing.mdx      # This file
-│   └── templates/                # Document templates (.md files)
+├── _contributing/                 # Contributing documentation (this section)
+│   └── docs/
+│       ├── guides/               # Usage guides
+│       └── templates/            # Document templates
 │
 ├── project-1/                    # First project
 │   ├── docs/                     # MDX documentation
@@ -69,7 +58,6 @@ project-name/
 
 ### File Placement Conventions
 
-- **Architecture by Project**: All architecture documentation organized by project
 - **ADRs**: Architecture Decision Records in `docs/architecture/adr/`
 - **Solution Designs**: Feature designs with test designs in `docs/architecture/solution-designs/{number}/`
 - **Sequence Diagrams**: Organized by client in `docs/architecture/sequence/{client}/`
@@ -80,11 +68,13 @@ project-name/
 ## File Naming Conventions
 
 ### MDX Files
+
 - Use **kebab-case**: `my-document.mdx`
 - Use descriptive names: `create-customer.mdx` not `create.mdx`
 - Index files: Always named `index.mdx`
 
 ### Diagram Files
+
 - Use **kebab-case**: `system-architecture.puml`
 - Include descriptive names: `processing-flow.puml` not `flow.puml`
 - Extensions:
@@ -92,6 +82,7 @@ project-name/
   - Graphviz: `.dot`
 
 ### Subdirectories
+
 - Use **kebab-case**: `solution-design/`, `seq/`
 - Use descriptive names
 
@@ -114,19 +105,19 @@ description: Brief description of the page content
 ---
 title: Page Title
 description: Brief description of the page content
-icon: IconName  # Lucide icon name (e.g., Book, Network, Code)
+icon: IconName # Lucide icon name (e.g., Book, Network, Code)
 ---
 ```
 
 ### Guidelines
 
 - **Title**: Use title case, concise and descriptive
-- **Description**: One sentence summary, plain text (no markdown)
+- **Description**: One sentence summary, plain text
 - **Icon**: Use Lucide React icon names when applicable
 
 ## Navigation Configuration
 
-Navigation is configured using `meta.json` files in each directory.
+Navigation is configured using `meta.json` files in each directory. If `mdx` file is not added to meta.json, it's not displayed in PageTree sidebar.
 
 ### Structure
 
@@ -165,6 +156,7 @@ Navigation is configured using `meta.json` files in each directory.
 ```
 
 **Parameters:**
+
 - `lang`: Diagram language (`plantuml`, `puml`, `graphviz`, `dot`, `c4plantuml`)
 - `path`: Path from `/content` directory with project prefix
 - `alt`: Accessibility text describing the diagram
@@ -187,6 +179,7 @@ See [Diagram Guide](./guides/diagram-guide) for detailed diagram usage.
 ## OpenAPI Integration
 
 ### File Location
+
 Place OpenAPI specification files in your project's `openapi/` directory:
 
 ```
@@ -231,10 +224,3 @@ pnpm typecheck
 # Linting
 pnpm lint
 ```
-
-## Getting Help
-
-- See [Documentation Types](./guides/documentation-types) to choose the right document type
-- Use [Templates](./templates) for ready-to-use document templates
-- Review [Diagram Guide](./guides/diagram-guide) for diagram best practices
-- Follow [Writing Guide](./guides/writing-guide) for style conventions

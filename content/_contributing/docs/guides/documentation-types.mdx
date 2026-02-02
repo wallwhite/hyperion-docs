@@ -4,86 +4,96 @@ description: When to use each type of documentation - ADRs, Agreements, Processe
 icon: FileText
 ---
 
-# Documentation Types
-
 This guide explains the different types of documentation we maintain and when to use each one.
 
 ## Documentation Types Overview
 
-| Type | What | When to Create | Location | Example |
-|------|------|----------------|----------|---------|
-| **ADR** | High-level architectural decisions + WHY | When choosing architecture approach | `/docs/architecture/{adr}/` | "Trunk-based development", "Microservices architecture" |
-| **Agreement** | Technical standards and conventions | When selecting specific tools/practices | `/docs/agreement/` | "PHPStan level 8 for PHP", "ESLint rules for TypeScript" |
-| **Process** | Workflow - WHO, WHEN, WHAT sequence | When establishing new team process | `/docs/process/` | "Duty Process", "Branch Strategy" |
-| **Solution Design** | Feature/project design document | Before implementing major features | `/docs/architecture/solution-designs/{number}/` | Feature design, System design |
-| **Test Design** | Testing strategy for feature | Together with Solution Design | `/docs/architecture/solution-designs/{number}/` | Feature test plan, QA strategy |
-| **C4 Diagram** | Architecture visualization (4 levels) | When architecture changes | `/docs/architecture/c4/` | System Context, Container diagram |
-| **Sequence Diagram** | Step-by-step component interactions | When showing flow between services | `/docs/architecture/sequence/` | Payment flow, Auth flow |
-| **ERD** | Data structure and relationships | When designing/changing database | `/docs/architecture/erd/` | Database schema |
-| **OpenAPI** | REST API specification | When creating/modifying API | `/openapi/` | API endpoints, schemas |
-| **Strategy** | Architectural strategy documents | For long-term direction | `/docs/architecture/strategy/` | Modernization approach |
+| Type                 | What                                     | When to Create                          | Location                                        | Example                                                  |
+| -------------------- | ---------------------------------------- | --------------------------------------- | ----------------------------------------------- | -------------------------------------------------------- |
+| **ADR**              | High-level architectural decisions + WHY | When choosing architecture approach     | `/docs/architecture/{adr}/`                     | "Trunk-based development", "Microservices architecture"  |
+| **Agreement**        | Technical standards and conventions      | When selecting specific tools/practices | `/docs/agreement/`                              | "PHPStan level 8 for PHP", "ESLint rules for TypeScript" |
+| **Process**          | Workflow - WHO, WHEN, WHAT sequence      | When establishing new team process      | `/docs/process/`                                | "Duty Process", "Branch Strategy"                        |
+| **Solution Design**  | Feature/project design document          | Before implementing major features      | `/docs/architecture/solution-designs/{number}/` | Feature design, System design                            |
+| **Test Design**      | Testing strategy for feature             | Together with Solution Design           | `/docs/architecture/solution-designs/{number}/` | Feature test plan, QA strategy                           |
+| **C4 Diagram**       | Architecture visualization (4 levels)    | When architecture changes               | `/docs/architecture/c4/`                        | System Context, Container diagram                        |
+| **Sequence Diagram** | Step-by-step component interactions      | When showing flow between services      | `/docs/architecture/sequence/`                  | Payment flow, Auth flow                                  |
+| **ERD**              | Data structure and relationships         | When designing/changing database        | `/docs/architecture/erd/`                       | Database schema                                          |
+| **OpenAPI**          | REST API specification                   | When creating/modifying API             | `/openapi/`                                     | API endpoints, schemas                                   |
+| **Strategy**         | Architectural strategy documents         | For long-term direction                 | `/docs/architecture/strategy/`                  | Modernization approach                                   |
 
 ## When to Use Each Type
 
 ### ADR (Architecture Decision Record)
+
 **Use when**: You need to document a significant architectural decision that will impact the system long-term.
 
 **Examples**:
+
 - Choosing microservices vs monolith
 - Selecting a database technology
 - Deciding on authentication approach
 - Trunk-based development vs GitFlow
 
-**Template**: [ADR Template](../templates/adr)
+**Template**: [ADR Template](../templates/adr-template)
 
 ### Agreement
+
 **Use when**: Teams need to agree on technical standards, conventions, or tool configurations.
 
 **Examples**:
+
 - Code style rules (ESLint, Prettier configs)
 - Linter levels (PHPStan level 8)
 - Testing requirements
 - Code review standards
 
-**Template**: [Agreement Template](../templates/agreement)
+**Template**: [Agreement Template](../templates/agreement-template)
 
 ### Process
+
 **Use when**: You need to document a workflow that involves multiple people and steps.
 
 **Examples**:
+
 - Duty support rotation process
 - Branch strategy and PR workflow
 - Release process
 - Incident response procedure
 
-**Template**: [Process Template](../templates/process)
+**Template**: [Process Template](../templates/process-template)
 
 ### Solution Design
+
 **Use when**: Planning a significant feature or system component before implementation.
 
 **Examples**:
+
 - New payment processing feature
 - Email notification system
 - API versioning approach
 - Data migration plan
 
-**Template**: [Solution Design Template](../templates/solution-design)
+**Template**: [Solution Design Template](../templates/solution-design-template)
 
 ### Test Design
+
 **Use when**: Creating solution design - always pair these together.
 
 **Examples**:
+
 - Test strategy for new feature
 - QA checklist
 - Performance testing approach
 - Integration test plan
 
-**Template**: [Test Design Template](../templates/test-design)
+**Template**: [Test Design Template](../templates/test-design-template)
 
 ### C4 Diagram
+
 **Use when**: Documenting system architecture at different abstraction levels.
 
 **The 4 Levels**:
+
 1. **System Context**: High-level view showing users and external systems
 2. **Container**: Major building blocks (apps, databases, services)
 3. **Component**: Internal structure of containers
@@ -92,30 +102,36 @@ This guide explains the different types of documentation we maintain and when to
 **See**: [Diagram Guide](./diagram-guide#c4-architecture-diagrams)
 
 ### Sequence Diagram
+
 **Use when**: Showing interactions between components over time.
 
 **Examples**:
+
 - API request flow
 - Authentication process
 - Payment transaction
 - Data synchronization
 
-**Template**: [Sequence Diagram Template](../templates/sequence-diagram)
+**Template**: [Sequence Diagram Template](../templates/sequence-diagram-template)
 
 ### ERD (Entity Relationship Diagram)
+
 **Use when**: Designing or documenting database schema.
 
 **Examples**:
+
 - Database schema design
 - Data model documentation
 - Schema migration planning
 
-**Template**: [ERD Template](../templates/erd)
+**Template**: [ERD Template](../templates/erd-template)
 
 ### OpenAPI
+
 **Use when**: Defining or documenting REST APIs.
 
 **Examples**:
+
 - API specification
 - API contract definition
 - API documentation
@@ -123,9 +139,11 @@ This guide explains the different types of documentation we maintain and when to
 **Process**: Create YAML spec → Run `pnpm build:openapi` → Generated docs appear
 
 ### Strategy
+
 **Use when**: Documenting long-term architectural direction or approach.
 
 **Examples**:
+
 - Migration from monolith to microservices
 - Technology modernization plan
 - Platform evolution roadmap

@@ -1,10 +1,15 @@
-# Sequence Diagram Template
+---
+title: Sequence Diagram Template
+description: Template for sequence diagrams showing component interactions over time
+icon: GitGraph
+---
 
 Use this template for sequence diagrams showing component interactions over time.
 
 ## When to Use
 
 Create a sequence diagram when showing:
+
 - API request flow
 - Authentication process
 - Payment transaction
@@ -23,7 +28,11 @@ description: Brief description of the sequence
 
 Brief description of what this sequence diagram shows.
 
-<Diagram lang="plantuml" path="seq/operation-name.puml" alt="Description" />
+<Diagram
+  lang="plantuml"
+  path="{project}/diagrams/seq/operation-name.puml"
+  alt="Description"
+/>
 
 ## Flow Description
 
@@ -42,7 +51,7 @@ Explain the key steps or important details about the sequence:
 
 ## PlantUML Diagram Template
 
-```plantuml
+```text
 @startuml
 !include /plantuml/themes/puml-theme-x-light.puml
 
@@ -73,18 +82,22 @@ deactivate Gateway
 ## Best Practices
 
 ### 1. Clear Actor Names
+
 Use descriptive, unambiguous names for participants.
 
 ### 2. Show Request and Response
+
 Include both arrows: `->` for requests, `-->` for responses.
 
 ### 3. Use Activation Boxes
+
 Show when components are active/processing with `activate`/`deactivate`.
 
 ### 4. Include Error Scenarios
+
 Document error handling with `alt`/`else` blocks:
 
-```plantuml
+```text
 alt success case
     Service --> Client: 200 OK
 else failure case
@@ -93,12 +106,14 @@ end
 ```
 
 ### 5. Time Ordering
+
 Arrange messages chronologically from top to bottom.
 
 ### 6. Add Notes for Clarity
+
 Use notes to explain complex logic:
 
-```plantuml
+```text
 note right of Service
   This is an important
   implementation detail
@@ -107,11 +122,11 @@ end note
 
 ## File Location
 
-Place sequence diagrams in: `/architecture/{project}/sequence/{client}/`
+Place sequence diagrams in: `content/{project}/diagrams/seq/{client}/`
 
-Example: `/architecture/billing-system/sequence/admin-portal/deactivate-customer.puml`
+Example: `content/billing-system/diagrams/seq/admin-portal/deactivate-customer.puml`
 
 ## See Also
 
-- [Diagram Guide](../guides/diagram-guide.md#sequence-diagram-standards) for detailed standards
-- [Solution Design Template](solution-design-template.md) for including sequences in designs
+- [Diagram Guide](../guides/diagram-guide) for detailed standards
+- [Solution Design Template](./solution-design-template) for including sequences in designs

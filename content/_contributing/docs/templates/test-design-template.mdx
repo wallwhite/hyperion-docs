@@ -1,10 +1,15 @@
-# Test Design Template
+---
+title: Test Design Template
+description: Template for documenting testing strategy alongside solution designs
+icon: TestTube
+---
 
 Use this template for documenting testing strategy alongside solution designs.
 
 ## When to Use
 
 Create a test design together with every solution design to document:
+
 - Test strategy for new feature
 - QA checklist
 - Performance testing approach
@@ -21,28 +26,35 @@ description: Testing strategy for [feature]
 # Test Design: Feature Name
 
 ## Overview
+
 Brief description of what this test design covers and the feature being tested.
 
 ## Test Strategy
 
 ### Scope
+
 What will be tested:
+
 - [ ] Component 1
 - [ ] Component 2
 - [ ] Integration points
 - [ ] Edge cases
 
 ### Out of Scope
+
 What will not be tested:
+
 - [ ] Item 1
 - [ ] Item 2
 
 ## Test Levels
 
 ### Unit Tests
+
 **Coverage Target**: X%
 
 **Focus Areas**:
+
 - [ ] Core business logic
 - [ ] Data validation
 - [ ] Error handling
@@ -51,30 +63,38 @@ What will not be tested:
 **Tools**: List testing frameworks and tools
 
 ### Integration Tests
+
 **Focus Areas**:
+
 - [ ] API endpoints
 - [ ] Database interactions
 - [ ] External service integrations
 - [ ] Message queues
 
 **Test Scenarios**:
+
 1. Scenario 1 description
 2. Scenario 2 description
 
 ### End-to-End Tests
+
 **User Flows**:
+
 1. Flow 1: Step-by-step description
 2. Flow 2: Step-by-step description
 
 **Tools**: List E2E testing tools
 
 ### Performance Tests
+
 **Metrics**:
+
 - Response time: Target X ms
 - Throughput: X requests/second
 - Resource usage: CPU, Memory targets
 
 **Load Scenarios**:
+
 - Normal load
 - Peak load
 - Stress test
@@ -83,41 +103,47 @@ What will not be tested:
 
 ### Critical Path Tests
 
-| ID | Test Case | Expected Result | Priority |
-|----|-----------|-----------------|----------|
-| TC-001 | Description | Expected outcome | High |
-| TC-002 | Description | Expected outcome | High |
+| ID     | Test Case   | Expected Result  | Priority |
+| ------ | ----------- | ---------------- | -------- |
+| TC-001 | Description | Expected outcome | High     |
+| TC-002 | Description | Expected outcome | High     |
 
 ### Edge Cases
 
-| ID | Test Case | Expected Result | Priority |
-|----|-----------|-----------------|----------|
-| TC-100 | Description | Expected outcome | Medium |
+| ID     | Test Case   | Expected Result  | Priority |
+| ------ | ----------- | ---------------- | -------- |
+| TC-100 | Description | Expected outcome | Medium   |
 
 ### Error Scenarios
 
-| ID | Test Case | Expected Error | Priority |
-|----|-----------|----------------|----------|
-| TC-200 | Description | Error message/code | High |
+| ID     | Test Case   | Expected Error     | Priority |
+| ------ | ----------- | ------------------ | -------- |
+| TC-200 | Description | Error message/code | High     |
 
 ## Test Data
 
 ### Data Requirements
+
 - Data set 1: Description
 - Data set 2: Description
 
 ### Test Environment Setup
-```bash
+
+\`\`\`bash
+
 # Commands to set up test environment
-```
+
+\`\`\`
 
 ## Localization Testing (if applicable)
+
 - [ ] Language 1
 - [ ] Language 2
 - [ ] Date/time formats
 - [ ] Currency formats
 
 ## Security Testing
+
 - [ ] Authentication tests
 - [ ] Authorization tests
 - [ ] Input validation
@@ -125,6 +151,7 @@ What will not be tested:
 - [ ] XSS prevention
 
 ## Acceptance Criteria
+
 - [ ] All critical path tests pass
 - [ ] No high-priority bugs
 - [ ] Performance targets met
@@ -132,20 +159,23 @@ What will not be tested:
 - [ ] Documentation updated
 
 ## Test Schedule
-| Phase | Duration | Notes |
-|-------|----------|-------|
-| Unit testing | X days | During development |
-| Integration testing | X days | After feature complete |
-| E2E testing | X days | In staging environment |
-| Performance testing | X days | Before production |
+
+| Phase               | Duration | Notes                  |
+| ------------------- | -------- | ---------------------- |
+| Unit testing        | X days   | During development     |
+| Integration testing | X days   | After feature complete |
+| E2E testing         | X days   | In staging environment |
+| Performance testing | X days   | Before production      |
 
 ## Risks & Mitigation
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Test environment instability | High | Setup dedicated test env |
-| Insufficient test data | Medium | Generate synthetic data |
+
+| Risk                         | Impact | Mitigation               |
+| ---------------------------- | ------ | ------------------------ |
+| Test environment instability | High   | Setup dedicated test env |
+| Insufficient test data       | Medium | Generate synthetic data  |
 
 ## References
+
 - Solution Design document
 - API documentation
 - User stories/requirements
@@ -164,8 +194,8 @@ What will not be tested:
 
 ## File Location
 
-Place test designs in: `/architecture/{project}/solution-designs/{number}/test-design.mdx`
+Place test designs in: `content/{project}/docs/architecture/solution-designs/{number}/test-design.mdx`
 
-Example: `/architecture/billing-system/solution-designs/001/test-design.mdx`
+Example: `content/billing-system/docs/architecture/solution-designs/001/test-design.mdx`
 
 **Note**: Test design should be in the same directory as its corresponding solution design.

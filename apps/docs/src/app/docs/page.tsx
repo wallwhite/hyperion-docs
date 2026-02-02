@@ -16,9 +16,9 @@ export default function DocsIndexPage() {
           href="/docs/digital-university"
         />
         <Card
-          title="Platform"
-          description="Documentation platform guides, templates, and contributing guidelines"
-          href="/docs/platform"
+          title="Contributing"
+          description="Documentation contributing guidelines and templates"
+          href="/docs/contributing"
         />
       </Cards>
     </main>

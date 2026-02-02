@@ -4,8 +4,6 @@ description: Writing style, formatting standards, and content guidelines for doc
 icon: Pen
 ---
 
-# Writing Guide
-
 This guide covers writing style, formatting standards, and content guidelines for Hyperion Docs documentation.
 
 ## Technical Documentation Tone
@@ -19,9 +17,11 @@ This guide covers writing style, formatting standards, and content guidelines fo
 ### Examples
 
 **Good**:
+
 > The API validates input before processing the request.
 
 **Avoid**:
+
 > The API will be validating input, and then it might process the request.
 
 ## Code Examples
@@ -89,8 +89,11 @@ Use hierarchical heading structure:
 
 ```mdx
 # Page Title (H1)
+
 ## Main Section (H2)
+
 ### Subsection (H3)
+
 #### Detail (H4)
 ```
 
@@ -104,16 +107,22 @@ Use hierarchical heading structure:
 ### Examples
 
 **Good**:
+
 ```mdx
 # Architecture Decision Records
+
 ## When to Create an ADR
+
 ### Examples of ADR-worthy decisions
 ```
 
 **Avoid**:
+
 ```mdx
 # ARCHITECTURE DECISION RECORDS!!!
+
 ## When You Should Create An ADR
+
 #### Examples
 ```
 
@@ -154,7 +163,7 @@ Use tables for structured data:
 
 ```mdx
 | Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
+| -------- | -------- | -------- |
 | Data 1   | Data 2   | Data 3   |
 | Data 4   | Data 5   | Data 6   |
 ```
@@ -211,7 +220,7 @@ Click the **Submit** button.
 Use for emphasis or introducing new terms:
 
 ```mdx
-The *primary key* uniquely identifies each record.
+The _primary key_ uniquely identifies each record.
 ```
 
 ## Paragraphs
@@ -250,6 +259,7 @@ Use clear placeholders for variable content:
 ```
 
 Common placeholder patterns:
+
 - `{project}` - Project name
 - `{number}` - Sequential number
 - `{topic}` - Topic or category name
@@ -286,33 +296,41 @@ See [this](../templates/solution-design).
 ### 1. Unclear Antecedents
 
 **Avoid**:
+
 > The system processes the request and sends it to the database. It returns the results.
 
 **Good**:
+
 > The system processes the request and sends it to the database. The database returns the results.
 
 ### 2. Passive Voice Overuse
 
 **Avoid**:
+
 > The configuration file should be updated by the administrator.
 
 **Good**:
+
 > The administrator should update the configuration file.
 
 ### 3. Unnecessary Words
 
 **Avoid**:
+
 > In order to start the server, you need to run the command.
 
 **Good**:
+
 > To start the server, run the command.
 
 ### 4. Ambiguous Instructions
 
 **Avoid**:
+
 > Update the file.
 
 **Good**:
+
 > Update the `config.yaml` file with your API credentials.
 
 ## Terminology
@@ -327,12 +345,12 @@ Use consistent terms throughout:
 
 ### Common Terms
 
-| Use | Avoid |
-|-----|-------|
-| authentication | auth (in formal docs) |
-| configuration | config (in formal docs) |
-| repository | repo (in formal docs) |
-| documentation | docs (except in titles/names) |
+| Use            | Avoid                         |
+| -------------- | ----------------------------- |
+| authentication | auth (in formal docs)         |
+| configuration  | config (in formal docs)       |
+| repository     | repo (in formal docs)         |
+| documentation  | docs (except in titles/names) |
 
 ## Versioning and Dates
 

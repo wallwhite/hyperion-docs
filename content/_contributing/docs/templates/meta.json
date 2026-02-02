@@ -1,0 +1,13 @@
+{
+  "title": "Templates",
+  "pages": [
+    "adr-template",
+    "solution-design-template",
+    "test-design-template",
+    "erd-template",
+    "sequence-diagram-template",
+    "agreement-template",
+    "guideline-template",
+    "process-template"
+  ]
+}

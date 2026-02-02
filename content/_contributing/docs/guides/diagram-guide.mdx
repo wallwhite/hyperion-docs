@@ -4,19 +4,17 @@ description: Using diagrams in Hyperion Docs - PlantUML, Mermaid, Graphviz, C4, 
 icon: Image
 ---
 
-# Diagram Guide
-
 This guide covers everything about using diagrams in Hyperion Docs: PlantUML, Mermaid, Graphviz, C4, theming, and best practices.
 
 ## Supported Diagram Types
 
-| Type | Language Code | Extension | Use Case |
-|------|--------------|-----------|----------|
-| PlantUML | `plantuml` or `puml` | `.puml` | ERD, sequence diagrams, class diagrams, component diagrams |
-| Graphviz | `graphviz` or `dot` | `.dot` | Flow diagrams, directed graphs |
-| Mermaid | `mermaid` | N/A (inline) | All diagram types, inline rendering |
-| C4 PlantUML | `c4plantuml` | `.puml` | Architecture diagrams using C4 model (PlantUML syntax) |
-| C4 Mermaid | `mermaid` | N/A (inline) | Architecture diagrams using C4 model (Mermaid syntax) |
+| Type        | Language Code        | Extension    | Use Case                                                   |
+| ----------- | -------------------- | ------------ | ---------------------------------------------------------- |
+| PlantUML    | `plantuml` or `puml` | `.puml`      | ERD, sequence diagrams, class diagrams, component diagrams |
+| Graphviz    | `graphviz` or `dot`  | `.dot`       | Flow diagrams, directed graphs                             |
+| Mermaid     | `mermaid`            | N/A (inline) | All diagram types, inline rendering                        |
+| C4 PlantUML | `c4plantuml`         | `.puml`      | Architecture diagrams using C4 model (PlantUML syntax)     |
+| C4 Mermaid  | `mermaid`            | N/A (inline) | Architecture diagrams using C4 model (Mermaid syntax)      |
 
 ## When to Use Each Type
 
@@ -39,6 +37,7 @@ This guide covers everything about using diagrams in Hyperion Docs: PlantUML, Me
 ```
 
 **Path Rules**:
+
 - All paths are relative to the `/content` directory
 - Use the project prefix: `project-name/diagrams/...`
 - Use subdirectories to organize: `architecture/`, `sequence/`, etc.
@@ -336,15 +335,18 @@ Always provide descriptive `alt` text:
 ## Security Considerations
 
 ### Size Limits
+
 - Maximum file size: **256 KB** (after include resolution)
 - Enforced before rendering
 
 ### Path Validation
+
 - All diagram paths must resolve within the `/content` directory
 - Path traversal attempts are blocked
 - Applies to both main files and `!include` directives
 
 ### Language Allowlist
+
 - Only supported diagram languages are accepted
 - Configured in API route's `LANG_MAP`
 - Extensible by adding entries to the language map
@@ -362,16 +364,32 @@ Always provide descriptive `alt` text:
 
 ```mdx
 {/* PlantUML external file */}
-<Diagram lang="plantuml" path="project-name/diagrams/architecture.puml" alt="Architecture diagram" />
+
+<Diagram
+  lang="plantuml"
+  path="project-name/diagrams/architecture.puml"
+  alt="Architecture diagram"
+/>
 
 {/* Graphviz external file */}
-<Diagram lang="graphviz" path="project-name/diagrams/flow.dot" alt="Flow diagram" />
+
+<Diagram
+  lang="graphviz"
+  path="project-name/diagrams/flow.dot"
+  alt="Flow diagram"
+/>
 
 {/* Mermaid inline */}
+
 <Diagram lang="mermaid" chart="graph TD; A-->B;" />
 
 {/* C4 Model */}
-<Diagram lang="c4plantuml" path="project-name/diagrams/c4-architecture.puml" alt="C4 diagram" />
+
+<Diagram
+  lang="c4plantuml"
+  path="project-name/diagrams/c4-architecture.puml"
+  alt="C4 diagram"
+/>
 ```
 
 ## Resources

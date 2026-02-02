@@ -1,12 +1,12 @@
 import { generate as DefaultImage } from 'fumadocs-ui/og';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
-import { getPageImage, platformSource, digitalUniversitySource } from '@/lib/source';
+import { getPageImage, contributingSource, digitalUniversitySource } from '@/lib/source';
 
 export const revalidate = false;
 
 export const generateStaticParams = () => {
-  const platformPages = platformSource.getPages().map((page) => ({
+  const platformPages = contributingSource.getPages().map((page) => ({
     lang: page.locale,
     slug: getPageImage(page).segments,
   }));
@@ -24,7 +24,7 @@ export const GET = async (_req: Request, { params }: RouteContext<'/og/docs/[...
   const slugPath = slug.slice(0, -1);
 
   // Try to find the page in either source
-  let page = platformSource.getPage(slugPath);
+  let page = contributingSource.getPage(slugPath);
   if (!page) {
     page = digitalUniversitySource.getPage(slugPath);
   }

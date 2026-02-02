@@ -1,17 +1,22 @@
-# ERD Template
+---
+title: ERD Template
+description: Template for Entity Relationship Diagrams documenting database schema
+icon: Database
+---
 
 Use this template for Entity Relationship Diagrams (ERD) to document database schema.
 
 ## When to Use
 
 Create an ERD when:
+
 - Designing database schema
 - Documenting data model
 - Planning schema migration
 
 ## Template
 
-```plantuml
+```text
 @startuml
 !include /plantuml/themes/puml-theme-x-light.puml
 
@@ -54,10 +59,6 @@ EntityName }|--|| RelatedEntity : "relationship"
 
 ## File Location
 
-Place ERDs in: `/architecture/{project}/erd/`
+Place ERDs in: `content/{project}/docs/architecture/erd/`
 
-Example: `/architecture/billing-system/erd/payment-schema.puml`
-
-## Validation Example
-
-See [ERD Validation Example](https://gist.github.com/Yozhef/0241b939e4d0f8a1cb8802b59cd8e52b) for how to validate ERD against database.
+Example: `content/billing-system/docs/architecture/erd/payment-schema.mdx`

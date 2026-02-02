@@ -1,166 +1,175 @@
 @startuml
 title NPP Portal - Database Schema
 
-' === USER DOMAIN ===
-package "User Domain" {
-  entity users {
-    * id : INTEGER <<PK>>
-    --
-    * uuid : UUID <<unique>>
-    * first_name : VARCHAR(255)
-    * last_name : VARCHAR(255)
-    * patronymic : VARCHAR(255)
-    * login : VARCHAR(255) <<unique>>
-    * email : VARCHAR(255) <<unique>>
-    * password : VARCHAR(255)
-    * role : ENUM(TEACHER,DIRECTOR,ADMIN)
-    * active : BOOLEAN
-    * created_at : TIMESTAMP
-    * updated_at : TIMESTAMP
+' Layout optimization for compact display
+skinparam linetype ortho
+skinparam ranksep 25
+skinparam nodesep 15
+skinparam packagePadding 8
+scale 0.9
+
+' === ROW 1: Organization + User Domain side by side ===
+together {
+  package "Organization Structure" {
+    entity institutes {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      inst_logo : VARCHAR(255)
+      inst_head : VARCHAR(255)
+      inst_page : VARCHAR(255)
+      * active : BOOLEAN
+    }
+
+    entity faculties {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      * institute_id : SMALLINT <<FK>>
+      fac_logo : VARCHAR(255)
+      fac_head : VARCHAR(255)
+      fac_page : VARCHAR(255)
+      * active : BOOLEAN
+    }
+
+    entity departments {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      * faculty_id : SMALLINT <<FK>>
+      dep_logo : VARCHAR(255)
+      dep_head : VARCHAR(255)
+      dep_page : VARCHAR(255)
+      * active : BOOLEAN
+    }
   }
 
-  entity user_details {
-    * id : INTEGER <<PK>>
-    --
-    * user_id : INTEGER <<FK>> <<unique>>
-    * degree_id : SMALLINT <<FK>>
-    * position_id : SMALLINT <<FK>>
-    * english_level_id : SMALLINT <<FK>>
-    * nas_affiliation_id : SMALLINT <<FK>>
-    * honors_id : SMALLINT <<FK>>
-    photo : VARCHAR(255)
-    * active : BOOLEAN
+  package "User Domain" {
+    entity users {
+      * id : INTEGER <<PK>>
+      --
+      * uuid : UUID <<unique>>
+      * first_name : VARCHAR(255)
+      * last_name : VARCHAR(255)
+      * patronymic : VARCHAR(255)
+      * login : VARCHAR(255) <<unique>>
+      * email : VARCHAR(255) <<unique>>
+      * password : VARCHAR(255)
+      * role : ENUM(TEACHER,DIRECTOR,ADMIN)
+      * active : BOOLEAN
+      * created_at : TIMESTAMP
+      * updated_at : TIMESTAMP
+    }
+
+    entity user_details {
+      * id : INTEGER <<PK>>
+      --
+      * user_id : INTEGER <<FK>> <<unique>>
+      * degree_id : SMALLINT <<FK>>
+      * position_id : SMALLINT <<FK>>
+      * english_level_id : SMALLINT <<FK>>
+      * nas_affiliation_id : SMALLINT <<FK>>
+      * honors_id : SMALLINT <<FK>>
+      photo : VARCHAR(255)
+      * active : BOOLEAN
+    }
+
+    entity user_departments {
+      * user_id : INTEGER <<PK,FK>>
+      * department_id : SMALLINT <<PK,FK>>
+      --
+      joint : INTEGER
+      workload : FLOAT
+    }
   }
 
-  entity user_departments {
-    * user_id : INTEGER <<PK,FK>>
-    * department_id : SMALLINT <<PK,FK>>
-    --
-    joint : INTEGER
-    workload : FLOAT
+  package "Activity Domain" {
+    entity activities {
+      * id : INTEGER <<PK>>
+      --
+      * description : VARCHAR(1000)
+      * year : SMALLINT
+      * semester : SMALLINT (0,1,2)
+      * works_type : ENUM(RESEARCH,TEACHING,SERVICE)
+      * activity_details_id : SMALLINT <<FK>>
+      * active : BOOLEAN
+      * created_at : TIMESTAMP
+      * updated_at : TIMESTAMP
+    }
+
+    entity activity_details {
+      * id : SMALLINT <<PK>>
+      --
+      num_in_ord : SMALLINT
+      * num_in_regulations : SMALLINT
+      * coefficient : FLOAT
+      * norm_time : FLOAT
+      additional_details : JSONB
+      * active : BOOLEAN
+    }
+
+    entity user_activities {
+      * user_id : INTEGER <<PK,FK>>
+      * activity_id : INTEGER <<PK,FK>>
+      --
+      is_owner : BOOLEAN
+    }
   }
 }
 
-' === ORGANIZATION STRUCTURE ===
-package "Organization Structure" {
-  entity institutes {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    inst_logo : VARCHAR(255)
-    inst_head : VARCHAR(255)
-    inst_page : VARCHAR(255)
-    * active : BOOLEAN
-  }
-
-  entity faculties {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    * institute_id : SMALLINT <<FK>>
-    fac_logo : VARCHAR(255)
-    fac_head : VARCHAR(255)
-    fac_page : VARCHAR(255)
-    * active : BOOLEAN
-  }
-
-  entity departments {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    * faculty_id : SMALLINT <<FK>>
-    dep_logo : VARCHAR(255)
-    dep_head : VARCHAR(255)
-    dep_page : VARCHAR(255)
-    * active : BOOLEAN
-  }
-}
-
-' === ACTIVITY DOMAIN ===
-package "Activity Domain" {
-  entity activities {
-    * id : INTEGER <<PK>>
-    --
-    * description : VARCHAR(1000)
-    * year : SMALLINT
-    * semester : SMALLINT (0,1,2)
-    * works_type : ENUM(RESEARCH,TEACHING,SERVICE)
-    * activity_details_id : SMALLINT <<FK>>
-    * active : BOOLEAN
-    * created_at : TIMESTAMP
-    * updated_at : TIMESTAMP
-  }
-
-  entity activity_details {
-    * id : SMALLINT <<PK>>
-    --
-    num_in_ord : SMALLINT
-    * num_in_regulations : SMALLINT
-    * coefficient : FLOAT
-    * norm_time : FLOAT
-    additional_details : JSONB
-    * active : BOOLEAN
-  }
-
-  entity user_activities {
-    * user_id : INTEGER <<PK,FK>>
-    * activity_id : INTEGER <<PK,FK>>
-    --
-    is_owner : BOOLEAN
-  }
-}
-
-' === DICTIONARIES ===
+' === ROW 2: Dictionaries (compact horizontal layout) ===
 package "Dictionaries" {
-  entity degrees {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    short_name : VARCHAR(50)
-    * active : BOOLEAN
-  }
+  together {
+    entity degrees {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      short_name : VARCHAR(50)
+      * active : BOOLEAN
+    }
 
-  entity positions {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    * active : BOOLEAN
-  }
+    entity positions {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      * active : BOOLEAN
+    }
 
-  entity english_levels {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    level : VARCHAR(10)
-    * active : BOOLEAN
-  }
+    entity english_levels {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      level : VARCHAR(10)
+      * active : BOOLEAN
+    }
 
-  entity nas_affiliations {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    * active : BOOLEAN
-  }
+    entity nas_affiliations {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      * active : BOOLEAN
+    }
 
-  entity honors {
-    * id : SMALLINT <<PK>>
-    --
-    * name : VARCHAR(255)
-    * active : BOOLEAN
+    entity honors {
+      * id : SMALLINT <<PK>>
+      --
+      * name : VARCHAR(255)
+      * active : BOOLEAN
+    }
   }
 }
 
 ' === RELATIONSHIPS ===
 
-' User relationships
-users ||--o| user_details : "has"
-users ||--o{ user_departments : "assigned to"
-users ||--o{ user_activities : "creates"
-
 ' Organization hierarchy
 institutes ||--o{ faculties : "contains"
 faculties ||--o{ departments : "contains"
 departments ||--o{ user_departments : "employs"
+
+' User relationships
+users ||--o| user_details : "has"
+users ||--o{ user_departments : "assigned to"
+users ||--o{ user_activities : "creates"
 
 ' Activity relationships
 activities ||--o{ user_activities : "authored by"

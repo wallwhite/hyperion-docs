@@ -7,101 +7,45 @@ description: Complete database schema for NPP Portal
 
 This ERD shows all entities and relationships in the NPP Portal database, organized into four domains.
 
-<Diagram lang="plantuml" path="digital-university/diagrams/erd/main-schema.puml" alt="NPP Portal complete database schema" />
-
-## Domain Overview
-
-### User Domain
-Core user authentication and profile data.
-
-| Entity | Purpose |
-|--------|---------|
-| `users` | Base user account with credentials and role |
-| `user_details` | Extended profile (degree, position, honors) |
-| `user_departments` | Many-to-many linking users to departments |
-
-### Organization Structure
-Hierarchical university structure.
-
-| Entity | Purpose |
-|--------|---------|
-| `institutes` | Top-level organizational unit |
-| `faculties` | Division within an institute |
-| `departments` | Academic department within a faculty |
-
-### Activity Domain
-Work reporting and tracking.
-
-| Entity | Purpose |
-|--------|---------|
-| `activities` | Individual work records (scientific/methodological/organizational) |
-| `activity_details` | Dictionary of activity types with rating coefficients |
-| `user_activities` | Many-to-many linking users to activities (co-authorship) |
-
-### Dictionaries
-Reference data for dropdowns and validation.
-
-| Entity | Purpose |
-|--------|---------|
-| `degrees` | Academic degrees (PhD, Doctor of Science, etc.) |
-| `positions` | Job titles (Professor, Associate Professor, etc.) |
-| `english_levels` | English proficiency levels |
-| `nas_affiliations` | National Academy of Sciences membership types |
-| `honors` | Honorary titles and awards |
-
-## Key Relationships
-
-### User ↔ Department (Many-to-Many)
-- A user can work at multiple departments (joint positions)
-- `user_departments` includes `joint` (position type) and `workload` (percentage)
-
-### User ↔ Activity (Many-to-Many)
-- Activities can have multiple authors (co-authorship)
-- `user_activities.is_owner` indicates the primary author
-
-### Organization Hierarchy
-```
-Institute → Faculty → Department → User
-```
-- Strict hierarchy: each department belongs to exactly one faculty
-- Each faculty belongs to exactly one institute
-
-### Activity ↔ ActivityDetails
-- Each activity references one `activity_details` entry (from dictionary)
-- `activity_details` contains `coefficient` and `norm_time` for rating calculation
+<Diagram
+  lang="plantuml"
+  path="digital-university/diagrams/erd/main-schema.puml"
+  alt="NPP Portal complete database schema"
+/>
 
 ## Design Decisions
 
 ### Soft Deletes
+
 All entities use `active: BOOLEAN` instead of hard deletes:
+
 - Preserves historical data
 - Maintains referential integrity
 - Allows recovery of accidentally deleted records
 
 ### JSONB for Flexible Data
+
 `activity_details.additional_details` uses PostgreSQL JSONB:
+
 - Different activity types may have different extra fields
 - Avoids schema changes for new activity type attributes
 - Queryable with PostgreSQL JSON operators
 
 ### UUID for External References
+
 `users.uuid` provides a stable external identifier:
+
 - Primary key `id` is internal only
 - UUID used in API responses and URLs
 - Prevents enumeration attacks
 
 ## Indexes
 
-| Table | Index | Purpose |
-|-------|-------|---------|
-| `users` | `idx_user_login` | Login lookup |
-| `users` | `idx_user_email` | Email lookup |
-| `users` | `idx_user_uuid` | API lookups |
-| `activities` | `idx_activity_year_semester` | Period filtering |
-| `activities` | `idx_activity_works_type` | Type filtering |
-| `departments` | `idx_department_faculty_active` | Faculty lookup |
-
-## Related Documentation
-
-- [ADR-002: Database Selection](../adr/ADR-002-database-selection)
-- [C4 Container Diagram](../c4/container-diagram)
+| Table         | Index                           | Purpose          |
+| ------------- | ------------------------------- | ---------------- |
+| `users`       | `idx_user_login`                | Login lookup     |
+| `users`       | `idx_user_email`                | Email lookup     |
+| `users`       | `idx_user_uuid`                 | API lookups      |
+| `activities`  | `idx_activity_year_semester`    | Period filtering |
+| `activities`  | `idx_activity_works_type`       | Type filtering   |
+| `departments` | `idx_department_faculty_active` | Faculty lookup   |
