@@ -82,32 +82,55 @@ const resolveIncludes = async (content: string, baseDir: string, includedFiles: 
   return resolved;
 };
 
-export const GET = async (req: NextRequest) => {
+const handleRequest = async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     const lang = searchParams.get('lang')?.toLowerCase() ?? '';
     const relPath = searchParams.get('path') ?? '';
+    let content = searchParams.get('content') ?? '';
+
+    // For POST requests, read content from body
+    if (req.method === 'POST' && !content) {
+      content = await req.text();
+    }
 
     const kind = LANG_MAP[lang];
 
     if (!kind) return NextResponse.json({ error: 'Unsupported lang' }, { status: 400 });
 
-    const abs = path.resolve(BASE_DIR, relPath);
+    let diagramContent: string;
 
-    if (!abs.startsWith(BASE_DIR)) return NextResponse.json({ error: 'Path outside allowlist' }, { status: 400 });
+    // If content is provided, use it directly; otherwise, read from file
+    if (content) {
+      diagramContent = content;
+    } else if (relPath) {
+      const abs = path.resolve(BASE_DIR, relPath);
 
-    const data = await fs.readFile(abs, 'utf8');
+      if (!abs.startsWith(BASE_DIR)) return NextResponse.json({ error: 'Path outside allowlist' }, { status: 400 });
 
-    // Resolve !include directives
-    const resolvedContent = await resolveIncludes(data, path.dirname(abs));
+      const data = await fs.readFile(abs, 'utf8');
 
-    if (Buffer.byteLength(resolvedContent) > MAX_BYTES) {
-      return NextResponse.json({ error: 'File too large' }, { status: 413 });
+      // Resolve !include directives only when reading from file
+      diagramContent = await resolveIncludes(data, path.dirname(abs));
+    } else {
+      return NextResponse.json({ error: 'Either content or path must be provided' }, { status: 400 });
+    }
+
+    if (Buffer.byteLength(diagramContent) > MAX_BYTES) {
+      return NextResponse.json({ error: 'Content too large' }, { status: 413 });
+    }
+
+    // For Mermaid diagrams, return the raw content to be rendered client-side
+    if (kind === 'mermaid') {
+      return new NextResponse(diagramContent, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
+      });
     }
 
     const krokiBase = process.env.KROKI_BASE_URL ?? 'http://kroki:8000';
 
-    const encoded = await encode(resolvedContent);
+    const encoded = await encode(diagramContent);
     const svgUrl = `${krokiBase}/${kind}/svg`
     const getUrl = `${svgUrl}/${encoded}`;
 
@@ -120,7 +143,7 @@ export const GET = async (req: NextRequest) => {
       r = await fetch(svgUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: resolvedContent,
+        body: diagramContent,
       });
     }
 
@@ -138,3 +161,6 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
   }
 };
+
+export const GET = handleRequest;
+export const POST = handleRequest;

@@ -16,9 +16,20 @@ All diagrams automatically adapt to your theme preference.
 
 Click any diagram to open it in a full-screen zoomable modal with pan/zoom controls powered by React Flow.
 
-## Mermaid Example
+### 📝 Inline Content & File Support
+
+All diagram types support both inline content and file-based diagrams:
+
+- **Inline Content**: Use the `chart` prop to embed diagram code directly in your MDX
+- **File-Based**: Use the `path` prop to load diagrams from external files
+
+This gives you flexibility to choose the best approach for your use case. Use inline for simple diagrams or when you want everything in one place. Use files for complex diagrams, reusable components, or when using PlantUML's `!include` feature.
+
+## Mermaid Examples
 
 Click any diagram to open it in a zoomable viewer!
+
+### Inline Content
 
 <Diagram
   lang="mermaid"
@@ -43,9 +54,43 @@ Z --> F;
 Z --> G;"
 />
 
+### From File
+
+<Diagram lang="mermaid" path="sequence.mmd" alt="Sequence Diagram" />
+
 ## PlantUML Entity-Relationship Diagram
 
+You can use PlantUML diagrams either from files or with inline content:
+
+### From File
+
 <Diagram lang="plantuml" path="erd.puml" alt="Entity Relationship Diagram" />
+
+### Inline Content
+
+<Diagram
+  lang="plantuml"
+  chart="@startuml
+entity User {
+  * id : UUID
+  --
+  * username : String
+  * email : String
+  * created_at : DateTime
+}
+
+entity Post {
+  * id : UUID
+  --
+  * title : String
+  * content : Text
+  * user_id : UUID
+  * created_at : DateTime
+}
+
+User ||--o{ Post : creates
+@enduml"
+/>
 
 ## PlantUML Include Feature
 
@@ -80,11 +125,225 @@ Here's our extended ERD that includes the base entities and adds a new Category 
 
 ## Graphviz Flow Diagram
 
+You can also use Graphviz diagrams with inline content:
+
+### From File
+
 <Diagram lang="graphviz" path="flow.dot" alt="Processing Flow" />
+
+### Inline Content
+
+<Diagram
+  lang="graphviz"
+  chart="digraph G {
+    rankdir=LR;
+    node [shape=box, style=rounded];
+
+    Start [shape=ellipse];
+    End [shape=ellipse];
+
+    Start -> Input;
+    Input -> Process [label=&quot;validate&quot;];
+    Process -> Decision [label=&quot;check&quot;];
+    Decision -> Output [label=&quot;valid&quot;];
+    Decision -> Error [label=&quot;invalid&quot;];
+    Output -> End;
+    Error -> End;
+  }"
+/>
 
 ## Architecture Diagram (C4 Model)
 
 <Diagram lang="plantuml" path="architecture.puml" alt="System Architecture" />
+
+## Large Inline PlantUML Diagram (POST Request Test)
+
+This example demonstrates automatic POST request handling for large inline diagrams that exceed the URL length limit:
+
+<Diagram
+  lang="plantuml"
+  chart="@startuml
+!define RECTANGLE class
+
+title Large E-Commerce System - Database Schema
+
+entity Customer {
+  * customer_id : UUID <<PK>>
+  --
+  * email : VARCHAR(255) <<unique>>
+  * password_hash : VARCHAR(255)
+  * first_name : VARCHAR(100)
+  * last_name : VARCHAR(100)
+  * phone_number : VARCHAR(20)
+  * date_of_birth : DATE
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  * is_active : BOOLEAN
+  * email_verified : BOOLEAN
+  * last_login : TIMESTAMP
+}
+
+entity Address {
+  * address_id : UUID <<PK>>
+  --
+  * customer_id : UUID <<FK>>
+  * address_type : ENUM('billing', 'shipping')
+  * street_address_1 : VARCHAR(255)
+  * street_address_2 : VARCHAR(255)
+  * city : VARCHAR(100)
+  * state_province : VARCHAR(100)
+  * postal_code : VARCHAR(20)
+  * country : VARCHAR(100)
+  * is_default : BOOLEAN
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+}
+
+entity Product {
+  * product_id : UUID <<PK>>
+  --
+  * category_id : UUID <<FK>>
+  * name : VARCHAR(255)
+  * description : TEXT
+  * sku : VARCHAR(100) <<unique>>
+  * price : DECIMAL(10,2)
+  * cost : DECIMAL(10,2)
+  * stock_quantity : INTEGER
+  * weight : DECIMAL(8,2)
+  * dimensions : VARCHAR(100)
+  * is_active : BOOLEAN
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  * deleted_at : TIMESTAMP
+}
+
+entity Category {
+  * category_id : UUID <<PK>>
+  --
+  * parent_category_id : UUID <<FK>>
+  * name : VARCHAR(100)
+  * description : TEXT
+  * slug : VARCHAR(100) <<unique>>
+  * image_url : VARCHAR(500)
+  * display_order : INTEGER
+  * is_active : BOOLEAN
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+}
+
+entity ProductImage {
+  * image_id : UUID <<PK>>
+  --
+  * product_id : UUID <<FK>>
+  * image_url : VARCHAR(500)
+  * alt_text : VARCHAR(255)
+  * display_order : INTEGER
+  * is_primary : BOOLEAN
+  * created_at : TIMESTAMP
+}
+
+entity Order {
+  * order_id : UUID <<PK>>
+  --
+  * customer_id : UUID <<FK>>
+  * billing_address_id : UUID <<FK>>
+  * shipping_address_id : UUID <<FK>>
+  * order_number : VARCHAR(50) <<unique>>
+  * order_status : ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled')
+  * payment_status : ENUM('pending', 'paid', 'failed', 'refunded')
+  * subtotal : DECIMAL(10,2)
+  * tax_amount : DECIMAL(10,2)
+  * shipping_cost : DECIMAL(10,2)
+  * total_amount : DECIMAL(10,2)
+  * currency : VARCHAR(3)
+  * notes : TEXT
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  * shipped_at : TIMESTAMP
+  * delivered_at : TIMESTAMP
+}
+
+entity OrderItem {
+  * order_item_id : UUID <<PK>>
+  --
+  * order_id : UUID <<FK>>
+  * product_id : UUID <<FK>>
+  * quantity : INTEGER
+  * unit_price : DECIMAL(10,2)
+  * discount_amount : DECIMAL(10,2)
+  * tax_amount : DECIMAL(10,2)
+  * subtotal : DECIMAL(10,2)
+  * created_at : TIMESTAMP
+}
+
+entity Payment {
+  * payment_id : UUID <<PK>>
+  --
+  * order_id : UUID <<FK>>
+  * payment_method : ENUM('credit_card', 'debit_card', 'paypal', 'bank_transfer')
+  * payment_status : ENUM('pending', 'completed', 'failed', 'refunded')
+  * amount : DECIMAL(10,2)
+  * currency : VARCHAR(3)
+  * transaction_id : VARCHAR(255)
+  * payment_gateway : VARCHAR(100)
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+}
+
+entity Review {
+  * review_id : UUID <<PK>>
+  --
+  * product_id : UUID <<FK>>
+  * customer_id : UUID <<FK>>
+  * rating : INTEGER
+  * title : VARCHAR(255)
+  * comment : TEXT
+  * is_verified_purchase : BOOLEAN
+  * helpful_count : INTEGER
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+}
+
+entity ShoppingCart {
+  * cart_id : UUID <<PK>>
+  --
+  * customer_id : UUID <<FK>>
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  * expires_at : TIMESTAMP
+}
+
+entity CartItem {
+  * cart_item_id : UUID <<PK>>
+  --
+  * cart_id : UUID <<FK>>
+  * product_id : UUID <<FK>>
+  * quantity : INTEGER
+  * added_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+}
+
+Customer ||--o{ Address : has
+Customer ||--o{ Order : places
+Customer ||--o{ Review : writes
+Customer ||--o| ShoppingCart : owns
+
+Product }o--|| Category : belongs_to
+Product ||--o{ ProductImage : has
+Product ||--o{ OrderItem : ordered_in
+Product ||--o{ Review : receives
+Product ||--o{ CartItem : in_cart
+
+Category ||--o{ Category : contains
+
+Order ||--o{ OrderItem : contains
+Order ||--|| Payment : has_payment
+Order }o--|| Address : billing_address
+Order }o--|| Address : shipping_address
+
+ShoppingCart ||--o{ CartItem : contains
+@enduml"
+/>
 
 ## Mermaid Sequence Diagram
 

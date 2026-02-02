@@ -2,19 +2,18 @@ import { type SupportedLanguage } from '@/lib/constants';
 
 export interface DiagramParamsBase {
   lang: SupportedLanguage;
-  path: string;
+  path?: string;
   chart?: string;
 }
 
-export interface MermaidParams extends DiagramParamsBase {
-  lang: 'mermaid';
+export interface DiagramWithContentParams extends DiagramParamsBase {
   chart: string;
+  path?: never;
 }
 
-export interface KrokiParams extends DiagramParamsBase {
-  lang: Exclude<SupportedLanguage, 'mermaid'>;
+export interface DiagramWithPathParams extends DiagramParamsBase {
   path: string;
-  chart: never;
+  chart?: never;
 }
 
-export type DiagramParams = MermaidParams | KrokiParams;
+export type DiagramParams = DiagramWithContentParams | DiagramWithPathParams;
