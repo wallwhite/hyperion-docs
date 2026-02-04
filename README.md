@@ -74,7 +74,7 @@ docker run --env KROKI_BASE_URL=https://kroki.io -p 3000:3000 archipelago
 ```
 Now you can see docs on **http://localhost:3000**.
 
-Please note that you need to set `KROKI_BASE_URL` to your Kroki instance. Here we set it to `https://kroki.io`, 
+Please note that you need to set `KROKI_BASE_URL` to your Kroki instance. Here we set it to `https://kroki.io`,
 what is public instance of Kroki but it could be insecure or unavailable to use in your production.
 
 ## Project Structure
@@ -162,6 +162,17 @@ MDX File → <Diagram> Component → /api/diagram API Route → Kroki Service �
 - Pan, zoom, reset controls
 
 ## Development
+
+### Environment Variables
+
+These variables configure API resources and static site generation behavior.
+
+- `API_RES_PATH` — Absolute or relative path to the API resources directory used by the docs app.
+  - Example: `API_RES_PATH=openapi`
+- `IS_PROD_STATIC` — Enable production static export mode (`true` or `false`).
+  - Example: `IS_PROD_STATIC=true`
+- `GITHUB_PAGES_REPO_NAME` — Repository name used for GitHub Pages base path when static export is enabled.
+  - Example: `GITHUB_PAGES_REPO_NAME=hyperion-docs`
 
 ### Local Development (without Docker)
 
